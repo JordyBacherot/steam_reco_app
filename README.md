@@ -15,11 +15,10 @@ TODO : A compléter
 
 Ce projet met en œuvre une architecture micro-services avec :
 
-- **API Principale** : [Hono](https://hono.dev/) tournant sur [Bun](https://bun.sh/).
+- **API Principale** : [Hono](https://hono.dev/) avec [Bun](https://bun.sh/).
   - ORM : [TypeORM](https://typeorm.io/)
 - **Base de Données** : [MariaDB](https://mariadb.org/)
 - **API de Recommandation** : [FastAPI](https://fastapi.tiangolo.com/) (Python)
-  - POC connecté à l'API Hono, sans véritable algorithme de recommandation pour le moment.
 - **Interface Database** : Adminer
 
 ## Installation et Démarrage
@@ -29,6 +28,7 @@ Le projet est entièrement conteneurisé avec Docker.
 ### Pré-requis
 
 - Docker installé.
+- Duplication des .env.example en .env.
 
 ### Démarrage
 

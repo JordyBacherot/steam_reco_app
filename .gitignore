@@ -1,2 +1,5 @@
 # deps
 api/node_modules/
+api_recommandation/.venv
+*.env
+*.pyc
