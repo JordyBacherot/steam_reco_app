@@ -1,4 +1,5 @@
-FROM python:3.12-slim
+# Utilisation de Python 3.11 pour la dépendance de "implicit"
+FROM python:3.11
 
 ENV \
     # Fixe la version de Poetry
@@ -10,7 +11,8 @@ ENV \
     # Affiche les logs (print, erreurs)
     PYTHONUNBUFFERED=1 \
     # Ajoute le dossier d'installation de Poetry au PATH pour utiliser la commande 'poetry'
-    PATH="/root/.local/bin:$PATH"
+    PATH="/root/.local/bin:$PATH" \
+    PYTHONPATH="${PYTHONPATH}:/app/src"
 
 # Installation de curl, installation de poetry, nettoyage de curl
 RUN apt-get update && apt-get install -y --no-install-recommends curl && \

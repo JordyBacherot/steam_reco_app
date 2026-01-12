@@ -29,7 +29,7 @@ services:
 
   db:
     restart: unless-stopped
-    image: mariadb
+    image: mariadb 
     container_name: db
     env_file:
       - ./db/.env
