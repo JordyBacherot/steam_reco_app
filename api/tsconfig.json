@@ -2,6 +2,14 @@
   "compilerOptions": {
     "strict": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
+    "jsxImportSource": "hono/jsx",
+
+    // Configuration TypeORM
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,  
+
+    // Configuration Bun
+    "module": "esnext",
+    "moduleResolution": "bundler"
   }
 }

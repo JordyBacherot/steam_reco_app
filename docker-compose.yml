@@ -11,6 +11,7 @@ services:
     ports:
       - 3000:3000
     environment:
+      # TODO: Set to production in production
       - NODE_ENV=development
     env_file:
       - ./api/.env
