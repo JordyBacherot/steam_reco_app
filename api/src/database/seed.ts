@@ -31,7 +31,7 @@ export const seedDatabase = async () => {
     const user = new User();
     user.username = "testuser";
     user.email = "test@example.com";
-    user.password = "hashedpassword"; // Penser à hasher en prod
+    user.password = await Bun.password.hash("password123"); // Mot de passe réel haché
     user.have_steamid = true;
     await AppDataSource.manager.save(user);
     console.log("User created:", user.id_user);

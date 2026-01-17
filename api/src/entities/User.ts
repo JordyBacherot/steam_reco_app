@@ -30,7 +30,8 @@ export class User {
   @Column({ unique: true })
   username!: string;
 
-  @Column()
+  // select: false pour sécurité (ne pas le renvoyer par défaut)
+  @Column({select: false })
   password!: string;
 
   @Column({ nullable: true })
@@ -38,6 +39,13 @@ export class User {
 
   @Column({ default: false })
   have_steamid!: boolean;
+
+  // select: false pour sécurité (ne pas le renvoyer par défaut)
+  @Column({ nullable: true, select: false }) 
+  refresh_token!: string | null;
+
+  @Column({ type: "datetime", nullable: true, select: false })
+  refresh_token_exp!: Date | null;
 
   @OneToOne("SteamUser", (steamUser: SteamUser) => steamUser.user)
   steamUser!: SteamUser;
