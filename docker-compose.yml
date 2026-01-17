@@ -65,6 +65,8 @@ services:
     # TODO: Remove ports for internal-only access : in production --> remove ports
     ports:
       - 8000:8000
+    env_file:
+      - ./api_recommendation/.env
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
