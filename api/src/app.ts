@@ -10,6 +10,7 @@ import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import authRouter from "./routes/auth";
+import recommendationRoutes from "./routes/recommendation";
 
 /**
  * ============================================================================
@@ -77,6 +78,8 @@ app.get("/health", async (c) => {
 
 // MONTAGE DES ROUTEURS (Sub-Apps)
 app.route("/auth", authRouter);
+
+app.route("/recommendations", recommendationRoutes);
 
 
 // GESTION DES ERREURS
