@@ -1,0 +1,22 @@
+meta {
+  name: Healthcheck
+  type: http
+  seq: 0
+}
+
+get {
+  url: {{host}}/health
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.status: eq healthy
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}

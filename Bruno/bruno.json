@@ -1,6 +1,6 @@
 {
   "version": "1",
-  "name": "Bruno",
+  "name": "Steam Reco App",
   "type": "collection",
   "ignore": [
     "node_modules",

@@ -1,0 +1,25 @@
+meta {
+  name: GetMe
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/auth/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.id_user: isNumber
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
