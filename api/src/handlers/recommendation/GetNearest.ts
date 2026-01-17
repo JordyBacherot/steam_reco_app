@@ -3,7 +3,6 @@ import { recommendationService } from "../../services/recommendationService";
 
 /**
  * Handler pour trouver les jeux les plus proches (similarité).
- * 
  * Route: GET /recommendations/nearest_games/:query
  * 
  * @param c - Contexte Hono

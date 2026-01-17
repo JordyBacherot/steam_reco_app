@@ -3,8 +3,7 @@ import { recommendationService } from "../../services/recommendationService";
 
 /**
  * Handler pour récupérer des recommandations basées sur un SteamID.
- * 
- * Route: GET /recommendations/steam/:steamId
+ * Route: GET /recommendations/:steamId
  * 
  * @param c - Contexte Hono
  * @returns JSON avec les recommandations

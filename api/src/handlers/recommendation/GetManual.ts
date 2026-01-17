@@ -3,10 +3,10 @@ import { recommendationService, ManualRecoRequest } from "../../services/recomme
 
 /**
  * Handler pour les recommandations manuelles (liste de jeux json).
- * 
  * Route: POST /recommendations/manual
  * 
  * @param c - Contexte Hono
+ *
  */
 export const getManualRecommendations = async (c: Context) => {
   try {
