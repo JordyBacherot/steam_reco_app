@@ -1,0 +1,27 @@
+meta {
+  name: Manual Recommendation
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{reco_host}}/recommendations/manual
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "games": [
+      {
+        "game_id": 10,
+        "hours": 500
+      },
+      {
+        "game_id": 730,
+        "hours": 1000
+      }
+    ],
+    "limit": 5
+  }
+}

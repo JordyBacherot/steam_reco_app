@@ -1,0 +1,15 @@
+meta {
+  name: Nearest Games
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{reco_host}}/nearest_games/Skyrim
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 5
+}

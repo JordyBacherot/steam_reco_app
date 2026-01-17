@@ -1,0 +1,15 @@
+meta {
+  name: Get recommendations
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{reco_host}}/recommendations/76561197960434622
+  body: none
+  auth: none
+}
+
+params:query {
+  limit: 10
+}
