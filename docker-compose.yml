@@ -1,4 +1,17 @@
 services:
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: front
+    restart: always
+    ports:
+      - 5173:80
+    networks:
+      - steam_reco_app
+    depends_on:
+      - api
+
   api:
     container_name: api
     build:

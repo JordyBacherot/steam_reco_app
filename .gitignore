@@ -1,4 +1,17 @@
+# API Hono
 api/node_modules/
-api_recommandation/.venv
-*.env
+
+# API Recommendation FastAPI
+api_recommendation/.venv
 *.pyc
+
+# All
+*.env
+
+# Flutter
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
