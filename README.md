@@ -78,3 +78,57 @@ Une fois les conteneurs démarrés (vérifiez avec `docker compose ps`), vous po
   - **Serveur** : `db`
   - **Utilisateur/Mdp** : Voir `db/.env` (MARIADB_DATABASE=steam_reco_app / MARIADB_USER=steam_reco_app / MARIADB_ROOT_PASSWORD=root_password1234 / MARIADB_PASSWORD=password1234)
   - **Base de données** : `steam_reco_db`
+
+---
+
+## 🛠️ Développement Local (Hybride)
+
+Bien que l'utilisation complète de Docker soit recommandée, vous pouvez lancer les APIs manuellement sur votre machine (avec `bun` ou `poetry`) tout en gardant la Base de Données dans Docker.
+
+### 1. Pré-requis
+
+- **Node.js / Bun** (pour l'API Hono)
+- **Python 3.10+ & Poetry** (pour l'API Reco)
+- **Docker** (pour la BDD en arrière-plan)
+
+### 2. Configuration BDD (Docker Uniquement)
+
+Gardez la BDD dans Docker pour éviter d'installer MariaDB localement.
+
+```bash
+# Lance uniquement la DB et Adminer
+docker compose up -d db adminer
+```
+
+### 3. API Hono (Node.js/Bun)
+
+1.  **Arrêter le conteneur Docker** (si lancé) pour libérer le port 3000 :
+    ```bash
+    docker stop api
+    ```
+2.  **Configuration .env** :
+    Dans `api/.env`, modifiez l'hôte de la base de données :
+    ```ini
+    DB_HOST=localhost  # Au lieu de 'db'
+    ```
+3.  **Lancement** :
+    ```bash
+    cd api
+    bun install
+    bun run dev
+    ```
+
+### 4. API Recommandation (Python/FastAPI)
+
+1.  **Arrêter le conteneur Docker** (si lancé) pour libérer le port 8000 :
+    ```bash
+    docker stop api_recommendation
+    ```
+2.  **Installation & Lancement** :
+    ```bash
+    cd api_recommendation
+    poetry install
+    poetry run fastapi run src/main.py
+    ```
+
+⚠️ **Note** : En mode hybride, assurez-vous que vos variables d'environnement (`.env`) pointent vers `localhost` pour les services qui tournent sur votre machine, et non vers les noms de conteneurs Docker (comme `db` ou `api_recommendation`).
