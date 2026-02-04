@@ -1,0 +1,16 @@
+meta {
+  name: DeleteGame
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{host}}/games/{{game_id}}
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

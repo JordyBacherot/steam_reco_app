@@ -1,0 +1,16 @@
+meta {
+  name: GetReviewById
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/reviews/{{reviewId}}
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body.id_review: eq {{reviewId}}
+}

@@ -1,0 +1,16 @@
+meta {
+  name: RemoveGameFromLibrary
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{host}}/users/1/games/220
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

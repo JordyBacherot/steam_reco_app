@@ -1,0 +1,31 @@
+meta {
+  name: CreateReview
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/reviews
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "id_game": 10,
+    "id_user": 1,
+    "text": "Excellent game, verified via Bruno!"
+  }
+}
+
+vars:post-response {
+  reviewId: res.body.id_review
+}
+
+assert {
+  res.status: eq 201
+}

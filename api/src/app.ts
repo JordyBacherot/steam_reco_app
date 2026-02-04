@@ -11,6 +11,12 @@ import { secureHeaders } from "hono/secure-headers";
 import { trimTrailingSlash } from "hono/trailing-slash";
 import authRouter from "./routes/auth";
 import recommendationRoutes from "./routes/recommendation";
+import userRoutes from "./routes/user";
+import gameRoutes from "./routes/game";
+import reviewRoutes from "./routes/review";
+import steamUserRoutes from "./routes/steamUser";
+import gameUserRoutes from "./routes/gameUser";
+import nearGameRoutes from "./routes/nearGame";
 
 /**
  * ============================================================================
@@ -80,6 +86,16 @@ app.get("/health", async (c) => {
 app.route("/auth", authRouter);
 
 app.route("/recommendations", recommendationRoutes);
+app.route("/users", userRoutes);
+app.route("/games", gameRoutes);
+app.route("/reviews", reviewRoutes);
+app.route("/steam_users", steamUserRoutes);
+
+// Mounting GameUser routes under /users so paths become /users/:userId/games
+app.route("/users", gameUserRoutes);
+
+// Mounting NearGame Manual routes
+app.route("/near_games", nearGameRoutes);
 
 
 // GESTION DES ERREURS

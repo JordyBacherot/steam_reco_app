@@ -1,0 +1,16 @@
+meta {
+  name: DeleteSteamUser
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{host}}/steam_users/1
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

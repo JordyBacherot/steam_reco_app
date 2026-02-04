@@ -1,0 +1,24 @@
+import { Context } from 'hono';
+import { AppDataSource } from "../../database/data-source";
+import { Review } from '../../entities/Review';
+import { HTTPException } from 'hono/http-exception';
+
+export const createReview = async (c: Context<any>) => {
+  try {
+    const reviewRepository = AppDataSource.getRepository(Review);
+    const data = await c.req.valid('json');
+
+    const newReview = reviewRepository.create({
+      text: data.text,
+      id_user: data.id_user,
+      id_game: data.id_game
+    });
+
+    const result = await reviewRepository.save(newReview);
+    return c.json(result, 201);
+  } catch (error) {
+    if (error instanceof HTTPException) throw error;
+    console.error(error);
+    throw new HTTPException(500, { message: "Erreur lors de la création de la review" });
+  }
+};

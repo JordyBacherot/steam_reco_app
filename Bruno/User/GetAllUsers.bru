@@ -1,0 +1,16 @@
+meta {
+  name: GetAllUsers
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{host}}/users
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

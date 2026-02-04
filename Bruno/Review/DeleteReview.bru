@@ -1,0 +1,20 @@
+meta {
+  name: DeleteReview
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{host}}/reviews/{{reviewId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+}

@@ -1,0 +1,16 @@
+meta {
+  name: GetGameReviews
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{host}}/reviews/game/10
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

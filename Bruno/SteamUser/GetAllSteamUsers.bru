@@ -1,0 +1,16 @@
+meta {
+  name: GetAllSteamUsers
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/steam_users
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body: isArray
+}

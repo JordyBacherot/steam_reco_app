@@ -1,0 +1,19 @@
+meta {
+  name: GetNearestGames
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/near_games/10
+  body: none
+  auth: none
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+}

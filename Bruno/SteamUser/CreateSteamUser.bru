@@ -1,0 +1,24 @@
+meta {
+  name: CreateSteamUser
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/steam_users
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id_steam": "76561198012345679",
+    "id_user": 1,
+    "username": "SteamBrunoUser",
+    "level": 42
+  }
+}
+
+assert {
+  res.status: eq 201
+}

@@ -1,0 +1,21 @@
+meta {
+  name: UpdateSteamUser
+  type: http
+  seq: 1
+}
+
+put {
+  url: {{host}}/steam_users/1
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "username": "SteamBrunoUpdated"
+  }
+}
+
+assert {
+  res.status: eq 200
+}

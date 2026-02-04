@@ -1,0 +1,30 @@
+meta {
+  name: CreateGame
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/games
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id_game": 730,
+    "name": "Counter-Strike 2",
+    "description": "For over two decades, Counter-Strike has offered an elite competitive experience.",
+    "studio": "Valve",
+    "image_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg"
+  }
+}
+
+vars:post-response {
+  game_id: res.body.id_game
+}
+
+assert {
+  res.status: eq 201
+  res.body.name: eq Counter-Strike 2
+}

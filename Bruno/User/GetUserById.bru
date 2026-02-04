@@ -1,0 +1,16 @@
+meta {
+  name: GetUserById
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/users/{{new_userId}}
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body.id_user: eq {{new_userId}}
+}

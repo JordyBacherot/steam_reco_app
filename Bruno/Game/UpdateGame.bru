@@ -1,0 +1,23 @@
+meta {
+  name: UpdateGame
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{host}}/games/{{game_id}}
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "CS2"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data.name: eq CS2
+}
