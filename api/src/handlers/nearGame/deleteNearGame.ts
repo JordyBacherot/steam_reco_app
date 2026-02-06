@@ -3,6 +3,11 @@ import { AppDataSource } from "../../database/data-source";
 import { NearGame } from '../../entities/NearGame';
 import { HTTPException } from 'hono/http-exception';
 
+/**
+ * Supprimer une liaison de proximité (NearGame)
+ * Route: DELETE /near-games/:id/:nearId
+ * Description: Supprime la relation de similarité entre deux jeux
+ */
 export async function deleteNearGame(c: Context) {
     try {
         const id_game = Number(c.req.param('id'));

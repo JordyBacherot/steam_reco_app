@@ -3,6 +3,11 @@ import { AppDataSource } from "../../database/data-source";
 import { GameUser } from '../../entities/GameUser';
 import { HTTPException } from 'hono/http-exception';
 
+/**
+ * Supprimer un jeu de la bibliothèque utilisateur
+ * Route: DELETE /users/:userId/games/:gameId
+ * Description: Retire l'association entre un utilisateur et un jeu
+ */
 export async function deleteGameUser(c: Context) {
     const gamesUsersRepository = AppDataSource.getRepository(GameUser);
 

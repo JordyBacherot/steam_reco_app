@@ -3,23 +3,30 @@ import { AppDataSource } from "../../database/data-source";
 import { HTTPException } from 'hono/http-exception'
 import { User } from '../../entities/User';
 
+/**
+ * Mettre à jour un utilisateur
+ * Route: PUT /users/:id
+ * Description: Modifie les informations d'un utilisateur existant
+ */
 export const updateUser = async (c: Context) => {
   try {
+    // 1. Récupération ID et données
     const id = Number(c.req.param('id'))
     const data = await c.req.json()
 
     const userRepository = AppDataSource.getRepository(User);
 
-    // On vérifie d'abord s'il existe
+    // 2. Vérification de l'existence
     const exists = await userRepository.findOneBy({ id_user: id })
     if (!exists) throw new HTTPException(404, { message: "Impossible de modifier : utilisateur introuvable" })
 
+    // 3. Mise à jour des informations
     await userRepository.update(
       { id_user: id },
       data
     )
 
-    // On recharge l'utilisateur mis à jour
+    // 4. Récupération de la version mise à jour pour le retour
     const updatedUser = await userRepository.findOneBy({ id_user: id });
     return c.json({ success: true, data: updatedUser })
   } catch (error) {

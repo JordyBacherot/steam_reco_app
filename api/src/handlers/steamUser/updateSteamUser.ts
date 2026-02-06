@@ -3,9 +3,18 @@ import { AppDataSource } from "../../database/data-source";
 import { HTTPException } from 'hono/http-exception'
 import { SteamUser } from '../../entities/SteamUser';
 
+/**
+ * Mettre à jour un compte Steam
+ * Route: PUT /steam-users/:id
+ * Description: Modifie les informations d'un compte Steam (niveau, image, etc.)
+ */
+/**
+ * Mettre à jour un compte Steam
+ * Route: PUT /steam-users/:id
+ * Description: Modifie les informations d'un compte Steam (niveau, image, etc.)
+ */
 export const updateSteamUser = async (c: Context<any>) => {
   try {
-    // Standardisation : On utilise l'ID User (numérique) comme pour GET/DELETE
     // Standardisation : On utilise l'ID User (numérique) comme pour GET/DELETE
     const id = Number(c.req.param('id'))
     const body = await c.req.valid('json');

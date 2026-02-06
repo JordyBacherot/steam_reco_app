@@ -4,6 +4,11 @@ import { User } from '../../entities/User';
 import { SteamUser } from '../../entities/SteamUser';
 import { HTTPException } from 'hono/http-exception';
 
+/**
+ * Lier un compte Steam
+ * Route: POST /steam-users
+ * Description: Associe un compte Steam à un utilisateur existant
+ */
 export const createSteamUser = async (c: Context<any>) => {
   try {
     // 1. Récupération des données validées

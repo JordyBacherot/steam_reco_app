@@ -16,11 +16,19 @@ export const createReviewSchema = z.object({
 
 const reviewRoutes = new Hono();
 
-reviewRoutes.get('/game/:id', getGameReviews);
-reviewRoutes.get('/user/:id', getUserReviews);
-reviewRoutes.get('/:id', getReviewById);
+// 1. Récupération des avis (Lecture)
+reviewRoutes.get('/game/:id', getGameReviews);  // Par Jeu
+reviewRoutes.get('/user/:id', getUserReviews);  // Par Utilisateur
+reviewRoutes.get('/:id', getReviewById);        // Par ID unique
+
+// 2. Création et Modification (Ecriture)
+// Ajout d'un avis avec validation obligatoire
 reviewRoutes.post('/', zValidator('json', createReviewSchema), createReview);
-reviewRoutes.put('/:id', zValidator('json', createReviewSchema), updateReview);
+
+// Mise à jour d'un avis existant
+reviewRoutes.put('/:id', zValidator('json', createReviewSchema.pick({ text: true })), updateReview);
+
+// 3. Suppression
 reviewRoutes.delete('/:id', deleteReview);
 
 export default reviewRoutes;

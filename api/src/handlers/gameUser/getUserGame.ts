@@ -4,6 +4,11 @@ import { Context } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 
 
+/**
+ * Récupérer la bibliothèque de jeux d'un utilisateur
+ * Route: GET /users/:userId/games
+ * Description: Renvoie la liste des jeux possédés par l'utilisateur
+ */
 export async function getGameByUser(c: Context) {
     try {
         const gamesUsersRepository = AppDataSource.getRepository(GameUser);

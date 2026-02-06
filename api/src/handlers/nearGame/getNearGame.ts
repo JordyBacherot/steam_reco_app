@@ -3,6 +3,11 @@ import { AppDataSource } from "../../database/data-source";
 import { NearGame } from '../../entities/NearGame';
 import { HTTPException } from 'hono/http-exception';
 
+/**
+ * Récupérer les jeux similaires
+ * Route: GET /near-games/:id
+ * Description: Renvoie la liste des jeux recommandés/similaires pour un jeu donné
+ */
 export async function getNearGame(c: Context) {
     try {
         const gameId = Number(c.req.param('id'));

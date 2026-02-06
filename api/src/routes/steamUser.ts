@@ -17,10 +17,17 @@ export const createSteamUserSchema = z.object({
 
 const steamUserRoutes = new Hono();
 
-steamUserRoutes.get('/', getAllSteamUser);
-steamUserRoutes.get('/:id', getSteamUserById);
+// 1. Lecture
+steamUserRoutes.get('/', getAllSteamUser);            // Liste tous les SteamUsers
+steamUserRoutes.get('/:id', getSteamUserById);        // Détail d'un SteamUser
+
+// 2. Ecriture (création avec validation)
 steamUserRoutes.post('/', zValidator('json', createSteamUserSchema), createSteamUser);
+
+// 3. Modification (partielle avec validation)
 steamUserRoutes.put('/:id', zValidator('json', createSteamUserSchema.partial()), updateSteamUser);
+
+// 4. Suppression
 steamUserRoutes.delete('/:id', deleteSteamUser);
 
 export default steamUserRoutes;

@@ -3,6 +3,11 @@ import { AppDataSource } from "../../database/data-source";
 import { GameUser } from '../../entities/GameUser';
 import { HTTPException } from 'hono/http-exception';
 
+/**
+ * Ajouter/Mettre à jour un jeu dans la bibliothèque utilisateur
+ * Route: POST /users/:userId/games
+ * Description: Ajoute un jeu ou met à jour le temps de jeu si déjà présent
+ */
 export async function createGameUser(c: Context) {
     const gamesUsersRepository = AppDataSource.getRepository(GameUser);
 
