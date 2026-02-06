@@ -12,8 +12,8 @@ export const createReview = async (c: Context<any>) => {
   try {
     const reviewRepository = AppDataSource.getRepository(Review);
 
-    // 1. Validation automatique via Zod (middleware)
-    const data = await c.req.valid('json');
+    // 1. Validation automatique via Zod
+    const data = await c.req.json();
 
     // 2. Création de l'entité
     const newReview = reviewRepository.create({

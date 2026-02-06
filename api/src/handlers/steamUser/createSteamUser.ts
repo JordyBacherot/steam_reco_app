@@ -12,7 +12,7 @@ import { HTTPException } from 'hono/http-exception';
 export const createSteamUser = async (c: Context<any>) => {
   try {
     // 1. Récupération des données validées
-    const body = await c.req.valid('json');
+    const body = await c.req.json();
     const { id_user, id_steam, username, level, profile_img } = body;
 
     const steamUserRepository = AppDataSource.getRepository(SteamUser);
