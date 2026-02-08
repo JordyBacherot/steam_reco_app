@@ -1,0 +1,37 @@
+meta {
+  name: Chat Stream (Hono)
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{host}}/recommendations/chat
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+body:json {
+  {
+    "message": "Conseille moi quelque chose de difficile comme mes jeux préférés. Réponds de manière conçise.",
+    "history": [],
+    "gamesList": [
+      {
+        "name": "Elden Ring",
+        "hours": 200
+      },
+      {
+        "name": "Dark Souls III",
+        "hours": 150
+      },
+      {
+        "name": "Hollow Knight",
+        "hours": 80
+      }
+    ],
+    "temperature": 0.2
+  }
+}

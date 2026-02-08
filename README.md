@@ -52,7 +52,7 @@ Copiez les fichiers d'exemple `.env.example` en `.env` dans les dossiers suivant
 | `api_recommendation/` | `cp api_recommendation/.env.example api_recommendation/.env` | Config sécurisée (API Key)               |
 | `db/`                 | `cp db/.env.example db/.env`                                 | Identifiants MariaDB (User, Password...) |
 
-> **Note** : Les fichiers `.env.example` sont pré-remplis avec des valeurs par défaut fonctionnant pour l'environnement Docker local. Le seul fichier à compléter est `api_recommendation/.env`, il faut renseigner la clé STEAM_API_KEY.
+> **Note** : Les fichiers `.env.example` sont pré-remplis avec des valeurs par défaut fonctionnant pour l'environnement Docker local. Les seuls fichiers à compléter sont `api_recommendation/.env`, il faut renseigner la clé STEAM_API_KEY et `api/.env`, il faut renseigner GROQ_API_KEY.
 
 ### 3. Lancement de l'Application
 

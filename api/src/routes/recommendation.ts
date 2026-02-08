@@ -3,6 +3,7 @@ import { getRecommendationsBySteamId } from "../handlers/recommendation/GetBySte
 import { getManualRecommendations } from "../handlers/recommendation/GetManual";
 import { getNearestGames } from "../handlers/recommendation/GetNearest";
 import { authMiddleware } from "../middlewares/auth";
+import { streamChatHandler } from "../handlers/recommendation/streamChat";
 
 /**
  * Routeur Hono pour les fonctionnalités de Recommandation.
@@ -13,6 +14,7 @@ const recommendationRoutes = new Hono();
 // Routes définies :
 recommendationRoutes.get("/:steamId", authMiddleware, getRecommendationsBySteamId);
 recommendationRoutes.post("/manual", authMiddleware, getManualRecommendations);
+recommendationRoutes.post("/chat", authMiddleware, streamChatHandler);
 recommendationRoutes.get("/nearest_games/:query", authMiddleware, getNearestGames);
 
 export default recommendationRoutes;

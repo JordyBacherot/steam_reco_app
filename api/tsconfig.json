@@ -3,17 +3,15 @@
     "strict": true,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "target": "ES5", // Keeps your output compatible with older environments
-    "lib": [
-      "ES5",
-      "ES2015",
-      "DOM"
-    ], // This tells TS "I promise a Promise constructor exists"
     // Configuration TypeORM
-    "experimentalDecorators": true,
+    "experimentalDecorators": true, 
     "emitDecoratorMetadata": true,
     // Configuration Bun
     "module": "esnext",
     "moduleResolution": "bundler",
+    
+    // Ajouts recommandés : 
+    "target": "ESNext",     // Pour garder le code moderne
+    "types": ["bun-types"]  // Pour reconnaître les fonctions Bun
   }
 }

@@ -6,6 +6,8 @@
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
+    "@langchain/core": "^1.1.19",
+    "@langchain/groq": "^1.0.4",
     "axios": "^1.13.2",
     "hono": "^4.11.3",
     "mysql2": "^3.16.0",
