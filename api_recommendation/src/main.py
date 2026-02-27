@@ -9,11 +9,6 @@ from dotenv import load_dotenv
 
 from reco_service import RecoService
 
-@app.get("/health")
-def health_check():
-    """Route de santé utilisée par Docker pour vérifier que l'API est en vie."""
-    return {"status": "ok"}
-
 # --- Modèles Pydantic pour l'API ---
 
 class GameItem(BaseModel):
@@ -64,6 +59,10 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, title="Steam Recommendation API")
 
+@app.get("/health")
+def health_check():
+    """Route de santé utilisée par Docker pour vérifier que l'API est en vie."""
+    return {"status": "ok"}
 
 @app.get("/")
 def read_root():

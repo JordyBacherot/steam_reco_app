@@ -8,7 +8,7 @@ RUN apt-get -y update;
 WORKDIR /app
 
 # Copie des fichiers de dépendances en premier (optimisation du cache Docker)
-COPY package.json bun.lock ./
+COPY package.json bun.lock tsconfig.json ./
 
 # Installation des dépendances
 RUN bun install
