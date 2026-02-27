@@ -2,6 +2,7 @@
   "name": "api",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
     "seed": "bun run src/database/seed.ts"
   },
   "dependencies": {
