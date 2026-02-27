@@ -16,7 +16,4 @@ RUN bun install
 # Copie du reste du code source
 COPY ./src ./src
 
-# NOTES DE DEMAARAGE :
-# La commande de démarrage est définie dans le `docker-compose.yml`.
-# En production : CMD ["bun", "run", "start"]
-# En développement (avec hot-reload) : CMD ["bun", "run", "dev"]
+CMD ["bun", "run", "start"]
