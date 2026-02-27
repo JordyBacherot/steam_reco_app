@@ -1,20 +1,19 @@
 services:
   front:
-    image: ghcr.io/JordyBacherot/steam-reco-front:latest
+    image: ghcr.io/jordybacherot/steam-reco-front:latest
     container_name: front
     restart: always
     ports:
-      - "127.0.0.1:5173:80" # 🔒 127.0.0.1 empêche Docker d'ouvrir le port sur internet, seul ton serveur y a accès
+      - "127.0.0.1:5173:80" # 🔒 127.0.0.1 empêche Docker d'ouvrir le port sur internet
     networks:
       - steam_reco_app
     depends_on:
       - api
 
   api:
-    image: ghcr.io/JordyBacherot/steam-reco-api:latest
+    image: ghcr.io/jordybacherot/steam-reco-api:latest
     container_name: api
     restart: always
-    # "command: bun run dev" supprimé -> ton Dockerfile de prod doit démarrer l'app
     ports:
       - "127.0.0.1:3000:3000" 
     environment:
@@ -37,7 +36,7 @@ services:
     image: mariadb
     container_name: db
     restart: unless-stopped
-    # 🔒 ports: 3306 supprimé -> La BDD est 100% invisible de l'extérieur
+    # 🔒 port 3306 supprimé -> La BDD est 100% invisible de l'extérieur
     env_file:
       - .env
     volumes:
@@ -51,10 +50,9 @@ services:
       - steam_reco_app
 
   api_recommendation:
-    image: ghcr.io/JordyBacherot/steam-reco-recommendation:latest
+    image: ghcr.io/jordybacherot/steam-reco-recommendation:latest
     container_name: api_recommendation
     restart: always
-    # "command: uvicorn --reload" supprimé -> pas de mode "reload" en prod
     ports:
       - "127.0.0.1:8000:8000"
     env_file:
@@ -62,7 +60,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      # On utilise un mini-script Python pour le healthcheck car curl a été désinstallé
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
