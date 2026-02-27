@@ -3,10 +3,10 @@ services:
     image: ghcr.io/jordybacherot/steam-reco-front:latest
     container_name: front
     restart: always
-    ports:
-      - "127.0.0.1:5173:80" # 🔒 127.0.0.1 empêche Docker d'ouvrir le port sur internet
+    # 🔒 Plus aucun port exposé !
     networks:
       - steam_reco_app
+      - proxy-network
     depends_on:
       - api
 
@@ -14,12 +14,11 @@ services:
     image: ghcr.io/jordybacherot/steam-reco-api:latest
     container_name: api
     restart: always
-    ports:
-      - "127.0.0.1:3000:3000" 
+    # 🔒 Plus aucun port exposé !
     environment:
       - NODE_ENV=production
     env_file:
-      - .env # Un seul fichier global sur le serveur
+      - .env
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/health"]
       interval: 30s
@@ -31,12 +30,12 @@ services:
         condition: service_healthy
     networks:
       - steam_reco_app
+      - proxy-network
 
   db:
     image: mariadb
     container_name: db
     restart: unless-stopped
-    # 🔒 port 3306 supprimé -> La BDD est 100% invisible de l'extérieur
     env_file:
       - .env
     volumes:
@@ -53,14 +52,12 @@ services:
     image: ghcr.io/jordybacherot/steam-reco-recommendation:latest
     container_name: api_recommendation
     restart: always
-    ports:
-      - "127.0.0.1:8001:8000"
+    # 🔒 Plus aucun port exposé !
     env_file:
       - .env
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
-      # On utilise un mini-script Python pour le healthcheck car curl a été désinstallé
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
       interval: 30s
       timeout: 5s
@@ -68,15 +65,16 @@ services:
       start_period: 10s
     networks:
       - steam_reco_app
+      - proxy-network
 
   adminer:
     image: adminer
     container_name: adminer
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:8080:8080"
+    # 🔒 Plus aucun port exposé !
     networks:
       - steam_reco_app
+      - proxy-network
 
 volumes:
   db_data:
@@ -84,3 +82,6 @@ volumes:
 networks:
   steam_reco_app:
     driver: bridge
+  # On déclare le réseau externe qu'on a créé à la main sur le serveur
+  proxy-network:
+    external: true
