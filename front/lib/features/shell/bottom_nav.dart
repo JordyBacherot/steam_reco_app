@@ -1,58 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:front/features/chatbot/chatbot_page.dart';
+import 'package:go_router/go_router.dart';
 
-class NavigationWrapper extends StatefulWidget {
-  const NavigationWrapper({super.key});
+class NavigationWrapper extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
 
-  @override
-  State<NavigationWrapper> createState() => _NavigationWrapperState();
-}
-
-class _NavigationWrapperState extends State<NavigationWrapper> {
-  // Garde en mémoire l'index de l'onglet actuellement sélectionné.
-  // "0" correspond au premier onglet (Accueil).
-  int _selectedIndex = 0;
-
-  // Liste des vues (Pages) correspondant à chaque onglet de la barre de navigation.
-  final List<Widget> _pages = [
-    const Center(child: Text('Accueil', style: TextStyle(color: Colors.white))),
-    const Center(
-        child: Text('Recommandations', style: TextStyle(color: Colors.white))),
-    const ChatbotPage(),
-    const Center(child: Text('Profil', style: TextStyle(color: Colors.white))),
-    const Center(
-        child: Text('Deconnexion', style: TextStyle(color: Colors.white)))
-  ];
+  const NavigationWrapper({
+    super.key,
+    required this.navigationShell,
+  });
 
   // Cette fonction est appelée automatiquement quand on clique sur un onglet.
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    // Intercept the tap on the 'Deconnexion' icon (index 4)
+    // to perform a logout action instead of navigating.
+    if (index == 4) {
+      // TODO: Implement the actual logout logic here (e.g. clear tokens, route to SignIn)
+      debugPrint("Action: Déconnexion triggered");
+      // Return early: we do NOT navigate
+      return;
+    }
+
+    // Use branch navigation for tabs 0 to 3
+    navigationShell.goBranch(
+      index,
+      // A common pattern when using bottom navigation bars is to support
+      // navigating to the initial location when tapping the item that is
+      // already active.
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     // Scaffold est le squelette visuel de base d'une page (ou de l'app entière).
     return Scaffold(
-      backgroundColor: const Color(0xFF1b2838), // Couleur de fond style Steam
-      // Affiche la page correspondant à l'index sélectionné parmi _pages.
-      body: _pages[_selectedIndex],
-      // La barre de navigation en bas de l'écran.
+      backgroundColor: const Color(0xFF1b2838),
+      body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF171a21),
         selectedItemColor: const Color(0xFF66c0f4),
         unselectedItemColor: Colors.grey,
-        currentIndex:
-            _selectedIndex, // Indique visuellement quel bouton est actif
-        onTap: _onItemTapped, // Ce qu'il se passe au clic -> change l'index
-        type: BottomNavigationBarType
-            .fixed, // Permet d'avoir plus de 3 onglets sans animations bizarres
+        currentIndex: navigationShell.currentIndex,
+        onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
           BottomNavigationBarItem(
               icon: Icon(Icons.explore), label: 'Découvrir'),
-          // L'icône de l'onglet Chatbot (il correspond à l'index 2 de _pages)
+          // L'icône de l'onglet Chatbot
           BottomNavigationBarItem(
               icon: Icon(Icons.chat_bubble), label: 'Chatbot'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
