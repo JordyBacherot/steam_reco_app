@@ -62,6 +62,12 @@ Copiez les fichiers d'exemple `.env.example` en `.env` dans les dossiers suivant
 docker compose up -d --build
 ```
 
+Attention, si Docker est très long à démarrer, lancer avec :
+
+```bash
+$env:BUILDX_NO_DEFAULT_ATTESTATIONS=1 ; docker compose up --build -d
+```
+
 _(L'option `--build` assure que les modifications récentes, notamment dans le Front ou l'API, sont bien prises en compte)_
 
 ### 4. Accès aux Services

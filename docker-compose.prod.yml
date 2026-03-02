@@ -67,15 +67,6 @@ services:
       - steam_reco_app
       - proxy-network
 
-  adminer:
-    image: adminer
-    container_name: adminer
-    restart: unless-stopped
-    # 🔒 Plus aucun port exposé !
-    networks:
-      - steam_reco_app
-      - proxy-network
-
 volumes:
   db_data:
 

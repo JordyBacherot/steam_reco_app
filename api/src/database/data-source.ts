@@ -17,7 +17,9 @@ export const AppDataSource = new DataSource({
   type: "mysql",
 
   // Connexion via variables d'environnement (.env ou docker-compose)
-  host: process.env.DB_HOST!,
+  // Astuce : Si DB_HOST="db" mais que le script est lancé sur Windows (process.platform === 'win32'),
+  // on force "localhost" car on lance l'API localement en dehors de Docker.
+  host: process.env.DB_HOST === 'db' && process.platform === 'win32' ? 'localhost' : process.env.DB_HOST!,
   port: parseInt(process.env.DB_PORT!),
   username: process.env.DB_USER,
   password: process.env.DB_PASSWORD,

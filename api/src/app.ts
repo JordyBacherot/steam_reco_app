@@ -53,7 +53,6 @@ app.use(
     origin: "*", // TODO : À sécuriser en production (mettre l'URL du front)
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
-    credentials: true
   })
 );
 

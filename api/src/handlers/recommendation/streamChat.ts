@@ -51,7 +51,11 @@ export const streamChatHandler = async (c: Context) => {
       
       Si l'utilisateur pose une question, réponds-y en tenant compte de ce profil.
       Si l'utilisateur ne dit rien de précis, propose une analyse de ses goûts et 2-3 recommandations pertinentes.
-      Sois convivial, précis et pertinent.`;
+      Sois convivial, précis et pertinent.
+      
+      RÈGLE DE FORMATAGE TRÈS IMPORTANTE : 
+      Utilise UNIQUEMENT du Markdown standard pour la mise en forme (**, *, -, etc.).
+      N'utilise JAMAIS de balises HTML (comme <br>, <b>, <i>). Fais de vrais retours à la ligne au lieu de <br>.`;
 
     const systemMessage = new SystemMessage(systemPromptContent);
 

@@ -28,6 +28,7 @@ export const seedDatabase = async () => {
     console.log("Seeding...");
 
     // 1. Création User
+    // TODO : Supprimer le user en production
     const user = new User();
     user.username = "testuser";
     user.email = "test@example.com";
