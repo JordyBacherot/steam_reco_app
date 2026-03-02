@@ -1,39 +1,45 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
-class NavigationWrapper extends StatefulWidget {
-  const NavigationWrapper({super.key});
+class NavigationWrapper extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
 
-  @override
-  State<NavigationWrapper> createState() => _NavigationWrapperState();
-}
-
-class _NavigationWrapperState extends State<NavigationWrapper> {
-  int _selectedIndex = 0;
-
-  final List<Widget> _pages = [
-    const Center(child: Text('Accueil', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Recommandations', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Chatbot', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Profil', style: TextStyle(color: Colors.white))),
-    const Center(child: Text('Deconnexion', style: TextStyle(color: Colors.white)))
-  ];
+  const NavigationWrapper({
+    super.key,
+    required this.navigationShell,
+  });
 
   void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
+    // Intercept the tap on the 'Deconnexion' icon (index 4) 
+    // to perform a logout action instead of navigating.
+    if (index == 4) {
+      // TODO: Implement the actual logout logic here (e.g. clear tokens, route to SignIn)
+      debugPrint("Action: Déconnexion triggered");
+      // Return early: we do NOT navigate
+      return;
+    }
+
+    // Use branch navigation for tabs 0 to 3
+    navigationShell.goBranch(
+      index,
+      // A common pattern when using bottom navigation bars is to support
+      // navigating to the initial location when tapping the item that is
+      // already active.
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF1b2838), 
-      body: _pages[_selectedIndex],
+      // The child of the Scaffold is the "Current Tab" provided by the NavigationShell
+      body: navigationShell,
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: const Color(0xFF171a21), 
         selectedItemColor: const Color(0xFF66c0f4),
         unselectedItemColor: Colors.grey,
-        currentIndex: _selectedIndex,
+        currentIndex: navigationShell.currentIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
         items: const [
