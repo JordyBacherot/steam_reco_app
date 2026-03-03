@@ -8,24 +8,15 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  build-front:
     runs-on: ubuntu-latest
-
-    # Autorisations nécessaires pour que le robot puisse lire le code et pousser les images
     permissions:
       contents: read
       packages: write
-
     steps:
-      # Étape A : Le robot télécharge ton code
       - name: 📥 Checkout du code
         uses: actions/checkout@v4
 
-      # Étape B : (Plus tard) Lancer les tests
-      - name: 🧪 Tests Unitaires (Placeholder)
-        run: echo "C'est ici qu'on lancera les tests (pytest, vitest, etc.) plus tard !"
-
-      # Étape C : Le robot se connecte à ton entrepôt d'images GitHub
       - name: 🔑 Connexion au GitHub Container Registry (GHCR)
         uses: docker/login-action@v3
         with:
@@ -33,7 +24,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Étape D1 : Construction et envoi de l'image Front-end (Flutter)
       - name: 📦 Build & Push Front-end (Flutter)
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
@@ -41,21 +31,57 @@ jobs:
           docker build -t ghcr.io/$OWNER/steam-reco-front:latest ./front
           docker push ghcr.io/$OWNER/steam-reco-front:latest
 
-      # Étape D2 : Construction et envoi de l'image API (Hono/Bun)
+  build-api:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Connexion au GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: 📦 Build & Push API (Hono)
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/$OWNER/steam-reco-api:latest ./api
           docker push ghcr.io/$OWNER/steam-reco-api:latest
 
-      # Étape D3 : Construction et envoi de l'image API Recommendation (FastAPI)
+  build-reco:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
+      - name: 🔑 Connexion au GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: 📦 Build & Push API Recommendation (FastAPI)
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/$OWNER/steam-reco-recommendation:latest ./api_recommendation
           docker push ghcr.io/$OWNER/steam-reco-recommendation:latest
 
-      # Étape D.5 : Le Livreur (Copie du fichier d'architecture sur le VPS)
+  deploy:
+    needs: [build-front, build-api, build-reco]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+
       - name: 📄 Copie du fichier docker-compose
         uses: appleboy/scp-action@master
         with:
@@ -65,7 +91,6 @@ jobs:
           source: "docker-compose.prod.yml"
           target: "/home/ubuntu/steam-reco-app/"
 
-      # Étape E : Connexion SSH sécurisée pour mettre à jour le serveur VPS
       - name: 🚀 Déploiement sur le VPS (via SSH)
         uses: appleboy/ssh-action@master
         with:
@@ -73,14 +98,7 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
-            # 1. On se rend dans le dossier que tu as créé sur le serveur
             cd ~/steam-reco-app
-
-            # On renomme le fichier de prod fraîchement livré pour que Docker le reconnaisse
             mv docker-compose.prod.yml docker-compose.yml
-
-            # 2. On télécharge les toutes nouvelles images qu'on vient de compiler
             docker compose pull
-
-            # 3. On redémarre les conteneurs en arrière-plan (Docker ne touchera qu'à ceux qui ont changé)
             docker compose up -d
