@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:front/features/main/models/game_model.dart';
+import 'package:go_router/go_router.dart';
+import 'package:front/models/game_model.dart';
 
 class RecommendationList extends StatelessWidget {
   final List<GameModel> games;
@@ -38,7 +39,7 @@ class RecommendationList extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(12),
                 onTap: () {
-                  // TODO: Navigate to game details
+                  context.push('/game/${game.id}');
                 },
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),

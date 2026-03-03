@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/features/main/models/game_model.dart';
+import 'package:front/models/game_model.dart';
 
 class AddedGameCard extends StatelessWidget {
   final GameModel game;

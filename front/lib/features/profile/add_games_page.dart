@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:front/features/main/models/game_model.dart';
+import 'package:front/models/game_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:front/features/profile/widgets/game_search_row.dart';
 import 'package:front/features/profile/widgets/game_preview_card.dart';
@@ -16,18 +16,22 @@ class _AddGamesPageState extends State<AddGamesPage> {
   // Fake game database for the dropdown
   final List<GameModel> _availableGames = [
     const GameModel(
+      id: '292030',
       title: 'The Witcher 3: Wild Hunt',
       imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/292030/capsule_231x87.jpg',
     ),
     const GameModel(
+      id: '620',
       title: 'Portal 2',
       imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/620/capsule_231x87.jpg',
     ),
     const GameModel(
+      id: '105600',
       title: 'Terraria',
       imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/105600/capsule_231x87.jpg',
     ),
     const GameModel(
+      id: '550',
       title: 'Left 4 Dead 2',
       imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/550/capsule_231x87.jpg',
     ),

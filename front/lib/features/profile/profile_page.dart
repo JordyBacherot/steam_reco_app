@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:front/services/auth_service.dart';
 
 /// The [ProfilePage] displays the current user's profile information, including
 /// their avatar, username, email, and SteamID. It also provides primary actions 
@@ -9,15 +11,15 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // --------------------------------------------------------------------------
-    // STATIC MOCK DATA
-    // --------------------------------------------------------------------------
-    // TODO: Replace these static variables with a real User model injected 
-    // via a state management solution (e.g. Provider, Riverpod, or BLoC).
-    const String username = 'JordyBacherot';
-    const String email = 'jordy.bacherot@example.com';
-    const String steamId = 'STEAM_0:1:12345678';
-    const String avatarUrl = 'https://picsum.photos/id/237/200/300';
+    final authService = context.watch<AuthService>();
+    final currentUser = authService.currentUser;
+
+    final String username = currentUser?['username'] ?? 'Utilisateur';
+    final String email = currentUser?['email'] ?? 'Non spécifié';
+    // Use the actual steam_id column if present, else fallback
+    final String steamId = currentUser?['steam_id'] ?? 'Non lié';
+    // Use the actual profile_picture if present, else default to a placeholder
+    final String avatarUrl = currentUser?['profile_picture'] ?? 'https://picsum.photos/id/237/200/300';
 
     return Padding(
       // Surround the entire vertical layout with generous padding
@@ -32,7 +34,7 @@ class ProfilePage extends StatelessWidget {
           // USER AVATAR
           // --------------------------------------------------------------------
           // Circular avatar displaying the user's profile picture fetched from network
-          const CircleAvatar(
+          CircleAvatar(
             radius: 60,
             backgroundImage: NetworkImage(avatarUrl),
           ),

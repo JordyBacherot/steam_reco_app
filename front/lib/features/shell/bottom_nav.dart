@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:front/services/auth_service.dart';
 
 class NavigationWrapper extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -10,13 +12,12 @@ class NavigationWrapper extends StatelessWidget {
   });
 
   // Cette fonction est appelée automatiquement quand on clique sur un onglet.
-  void _onItemTapped(int index) {
+  void _onItemTapped(BuildContext context, int index) {
     // Intercept the tap on the 'Deconnexion' icon (index 4)
     // to perform a logout action instead of navigating.
     if (index == 4) {
-      // TODO: Implement the actual logout logic here (e.g. clear tokens, route to SignIn)
-      debugPrint("Action: Déconnexion triggered");
-      // Return early: we do NOT navigate
+      // Execute the logout and GoRouter will redirect automatically
+      context.read<AuthService>().logout();
       return;
     }
 
@@ -41,7 +42,7 @@ class NavigationWrapper extends StatelessWidget {
         selectedItemColor: const Color(0xFF66c0f4),
         unselectedItemColor: Colors.grey,
         currentIndex: navigationShell.currentIndex,
-        onTap: _onItemTapped,
+        onTap: (index) => _onItemTapped(context, index),
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
