@@ -18,7 +18,7 @@ services:
     environment:
       - NODE_ENV=production
     env_file:
-      - .env
+      - ./api/.env.prod
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/health"]
       interval: 30s
@@ -37,7 +37,7 @@ services:
     container_name: db
     restart: unless-stopped
     env_file:
-      - .env
+      - ./db/.env.prod
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -54,7 +54,7 @@ services:
     restart: always
     # 🔒 Plus aucun port exposé !
     env_file:
-      - .env
+      - ./api_recommendation/.env.prod
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:

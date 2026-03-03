@@ -7,6 +7,7 @@ api_recommendation/.venv
 
 # All
 *.env
+*.env.prod
 
 # Flutter
 .dart_tool/

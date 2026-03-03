@@ -6,8 +6,11 @@ import 'package:front/features/recommendations/reco_page.dart';
 import 'package:front/features/chatbot/chatbot_page.dart';
 import 'package:front/features/profile/profile_page.dart';
 import 'package:front/features/profile/add_games_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   runApp(const MainApp());
 }
 
@@ -68,7 +71,7 @@ final GoRouter _router = GoRouter(
           routes: [
             GoRoute(
               path: '/logout_action',
-              builder: (context, state) => const SizedBox(), 
+              builder: (context, state) => const SizedBox(),
             ),
           ],
         ),

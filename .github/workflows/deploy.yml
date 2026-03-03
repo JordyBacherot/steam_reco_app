@@ -33,21 +33,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Étape D : Construction et envoi de tes 3 images Docker
-      - name: 📦 Build & Push des images
+      # Étape D1 : Construction et envoi de l'image Front-end (Flutter)
+      - name: 📦 Build & Push Front-end (Flutter)
         run: |
-          # Convertir le nom du propriétaire en minuscules (obligatoire pour Docker)
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-
-          # 1. Image Front-end (Flutter)
+          echo "API_URL=${{ secrets.API_URL }}" > ./front/.env
           docker build -t ghcr.io/$OWNER/steam-reco-front:latest ./front
           docker push ghcr.io/$OWNER/steam-reco-front:latest
 
-          # 2. Image API Node/Bun (Hono)
+      # Étape D2 : Construction et envoi de l'image API (Hono/Bun)
+      - name: 📦 Build & Push API (Hono)
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/$OWNER/steam-reco-api:latest ./api
           docker push ghcr.io/$OWNER/steam-reco-api:latest
 
-          # 3. Image API Recommendation (FastAPI)
+      # Étape D3 : Construction et envoi de l'image API Recommendation (FastAPI)
+      - name: 📦 Build & Push API Recommendation (FastAPI)
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/$OWNER/steam-reco-recommendation:latest ./api_recommendation
           docker push ghcr.io/$OWNER/steam-reco-recommendation:latest
 

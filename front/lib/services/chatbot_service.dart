@@ -2,12 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:front/models/chat_message.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ChatbotService {
   final Dio _dio = Dio();
 
-  // API URL (To replace later with .env)
-  final String _baseUrl = "http://localhost:3000";
+  // URL de l'API lue depuis le fichier .env (ex: "https://api.monsite.fr")
+  final String _baseUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
 
   String? _cachedToken;
 
