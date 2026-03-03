@@ -31,10 +31,10 @@ export const AppDataSource = new DataSource({
    * ⚠️ DANGEREUX en PROD (perte de données possible).
    * La condition assure que c'est false si NODE_ENV n'est pas "development".
    */
-  synchronize: process.env.NODE_ENV === "development",
+  synchronize: true,
 
   // Affiche les requêtes SQL en dev pour le debug
-  logging: process.env.NODE_ENV === "development",
+  logging: true,
 
   // Liste des entités à charger
   entities: [
