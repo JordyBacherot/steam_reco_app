@@ -4,6 +4,8 @@ services:
     container_name: front
     restart: always
     # 🔒 Plus aucun port exposé !
+    environment:
+      - API_URL=${API_URL}
     networks:
       - steam_reco_app
       - proxy-network
@@ -17,8 +19,16 @@ services:
     # 🔒 Plus aucun port exposé !
     environment:
       - NODE_ENV=production
-    env_file:
-      - ./api/.env.prod
+      - PORT=${PORT}
+      - JWT_SECRET=${JWT_SECRET}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PORT=${DB_PORT}
+      - API_RECOMMENDATION=${API_RECOMMENDATION}
+      - API_KEY_RECOMMENDATION=${API_KEY_RECOMMENDATION}
+      - GROQ_API_KEY=${GROQ_API_KEY}
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:3000/health"]
       interval: 30s
@@ -36,8 +46,11 @@ services:
     image: mariadb
     container_name: db
     restart: unless-stopped
-    env_file:
-      - ./db/.env.prod
+    environment:
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
     volumes:
       - db_data:/var/lib/mysql
     healthcheck:
@@ -53,10 +66,10 @@ services:
     container_name: api_recommendation
     restart: always
     # 🔒 Plus aucun port exposé !
-    env_file:
-      - ./api_recommendation/.env.prod
     environment:
       - PYTHONUNBUFFERED=1
+      - STEAM_API_KEY=${STEAM_API_KEY}
+      - API_KEY=${API_KEY}
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
       interval: 30s
