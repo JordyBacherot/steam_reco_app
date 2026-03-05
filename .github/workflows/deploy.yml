@@ -72,4 +72,17 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📦 Build & Push API Recommendation (FastAPI)
+        run: |
+          OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/$OWNER/steam-reco-recommendation:latest ./api_recommendation
+          docker push ghcr.io/$OWNER/steam-reco-recommendation:latest
+
+  deploy:
+    needs: [build-front, build-api, build-reco]
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚀 Déploiement sur le VPS (via Portainer Webhook)
+        run: curl -X POST "${{ secrets.PORTAINER_WEBHOOK }}"
