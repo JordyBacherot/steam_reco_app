@@ -1,15 +1,8 @@
 name: CI/CD Pipeline
 
 # 1. Quand est-ce que cette usine se lance ?
+# -> Uniquement via le bouton manuel "Run workflow" !
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "front/**"
-      - "api/**"
-      - "api_recommendation/**"
-      - ".github/workflows/**"
   workflow_dispatch:
 
 jobs:
