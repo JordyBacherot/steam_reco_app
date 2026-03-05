@@ -1,8 +1,6 @@
 name: CI/CD Pipeline
 
 # 1. Quand est-ce que cette usine se lance ?
-# -> Seulement sur la branche "main"
-# -> ET seulement si un fichier a été modifié dans l'un de ces 3 dossiers
 on:
   push:
     branches:
@@ -12,6 +10,7 @@ on:
       - "api/**"
       - "api_recommendation/**"
       - ".github/workflows/**"
+  workflow_dispatch:
 
 jobs:
   build-front:
