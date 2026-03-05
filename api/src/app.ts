@@ -32,29 +32,32 @@ const app = new Hono();
 // MIDDLEWARES GLOBAUX
 // --------------------------------------------------------
 
+app.use(
+  "*",
+  cors({
+    origin: [
+      "https://steam-reco-app.jordy-bacherot.fr", // L'URL de votre Front en Prod
+      "http://localhost:5173", // L'URL de votre Front en Dev local
+    ],
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization", "Accept"],
+    credentials: true,
+  }),
+);
+
 // Logger : Affiche les logs des requêtes dans la console
 app.use("*", honoLogger());
 
-// Secure Headers : Ajoute des en-têtes de sécurité 
+// Secure Headers : Ajoute des en-têtes de sécurité
 app.use(
   "*",
   secureHeaders({
-    crossOriginResourcePolicy: "cross-origin"
-  })
+    crossOriginResourcePolicy: "cross-origin",
+  }),
 );
 
 // Pretty JSON : Formatte le JSON pour qu'il soit lisible (utile en dev)
 app.use("*", prettyJSON());
-
-// CORS : Gestion des accès cross-origin
-app.use(
-  "*",
-  cors({
-    origin: "*", // TODO : À sécuriser en production (mettre l'URL du front)
-    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type", "Authorization"],
-  })
-);
 
 // Nettoyage des URL : Supprime le slash final (ex: /users/ -> /users)
 app.use("*", trimTrailingSlash());
@@ -75,9 +78,9 @@ app.get("/health", async (c) => {
       status: "healthy",
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
-      uptime: Math.floor(process.uptime()) + "s"
+      uptime: Math.floor(process.uptime()) + "s",
     },
-    200
+    200,
   );
 });
 
@@ -96,7 +99,6 @@ app.route("/users", gameUserRoutes);
 // Mounting NearGame Manual routes
 app.route("/near_games", nearGameRoutes);
 
-
 // GESTION DES ERREURS
 // 404 - Not Found
 app.notFound((c) => {
@@ -105,9 +107,9 @@ app.notFound((c) => {
       success: false,
       error: "Not Found",
       message: "Route not found",
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     },
-    404
+    404,
   );
 });
 
@@ -117,7 +119,7 @@ app.onError((error: Error, c) => {
   if (error instanceof HTTPException) {
     return c.json(
       { success: false, message: error.message ?? "An error has occurred" },
-      error.getResponse().status as ContentfulStatusCode
+      error.getResponse().status as ContentfulStatusCode,
     );
   }
   // Sinon, c'est un crash serveur inattendu (500)

@@ -91,8 +91,6 @@ class _ChatbotPageState extends State<ChatbotPage> {
   }
 
   Widget _buildMessage(ChatMessage message) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       child: Row(
@@ -101,9 +99,9 @@ class _ChatbotPageState extends State<ChatbotPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (message.isAssistant)
-            CircleAvatar(
-              backgroundColor: isDark ? Colors.blue[700] : Colors.blueAccent,
-              child: const Icon(Icons.smart_toy, color: Colors.white, size: 20),
+            const CircleAvatar(
+              backgroundColor: Color(0xFF2A475E),
+              child: Icon(Icons.smart_toy, color: Color(0xFF66C0F4), size: 20),
             ),
           const SizedBox(width: 8),
           Flexible(
@@ -111,30 +109,39 @@ class _ChatbotPageState extends State<ChatbotPage> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: message.isUser
-                    ? (isDark ? Colors.blue[800] : Colors.blue[100])
-                    : (isDark ? Colors.grey[800] : Colors.grey[200]),
+                    ? const Color(0xFF66C0F4).withOpacity(0.2)
+                    : const Color(0xFF2A475E),
                 borderRadius: BorderRadius.circular(16),
+                border: message.isUser
+                    ? Border.all(
+                        color: const Color(0xFF66C0F4).withOpacity(0.5))
+                    : null,
               ),
               child: MarkdownBody(
                 data: message.content,
                 selectable: true,
                 styleSheet: MarkdownStyleSheet(
-                  p: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                  // Applique la couleur sur les titres / listes si besoin
-                  h1: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                  h2: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                  h3: TextStyle(color: isDark ? Colors.white : Colors.black87),
-                  listBullet:
-                      TextStyle(color: isDark ? Colors.white : Colors.black87),
+                  p: const TextStyle(color: Colors.white),
+                  h1: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                  h2: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                  h3: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
+                  listBullet: const TextStyle(color: Colors.white),
+                  code: TextStyle(
+                    backgroundColor: Colors.black.withOpacity(0.4),
+                    color: const Color(0xFF66C0F4),
+                  ),
                 ),
               ),
             ),
           ),
           const SizedBox(width: 8),
           if (message.isUser)
-            CircleAvatar(
-              backgroundColor: isDark ? Colors.blueGrey[700] : Colors.blueGrey,
-              child: const Icon(Icons.person, color: Colors.white, size: 20),
+            const CircleAvatar(
+              backgroundColor: Color(0xFF66C0F4),
+              child: Icon(Icons.person, color: Color(0xFF1b2838), size: 20),
             ),
         ],
       ),
@@ -142,17 +149,16 @@ class _ChatbotPageState extends State<ChatbotPage> {
   }
 
   Widget _buildTextComposer() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color:
+            const Color(0xFF171a21), // Couleurs Steam pour la barre de saisie
         boxShadow: [
           BoxShadow(
             offset: const Offset(0, -2),
             blurRadius: 4,
-            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            color: Colors.black.withOpacity(0.3),
           ),
         ],
       ),
@@ -163,14 +169,16 @@ class _ChatbotPageState extends State<ChatbotPage> {
               child: TextField(
                 controller: _textController,
                 onSubmitted: _isLoading ? null : _handleSubmitted,
+                style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   hintText: 'Posez une question sur vos jeux...',
+                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24.0),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: isDark ? Colors.grey[800] : Colors.grey[100],
+                  fillColor: const Color(0xFF2A475E),
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
@@ -178,12 +186,12 @@ class _ChatbotPageState extends State<ChatbotPage> {
             ),
             const SizedBox(width: 8),
             Container(
-              decoration: BoxDecoration(
-                color: isDark ? Colors.blue[700] : Colors.blue,
+              decoration: const BoxDecoration(
+                color: Color(0xFF66C0F4), // Bouton d'envoi bleu Steam
                 shape: BoxShape.circle,
               ),
               child: IconButton(
-                icon: const Icon(Icons.send, color: Colors.white),
+                icon: const Icon(Icons.send, color: Color(0xFF1b2838)),
                 onPressed: _isLoading
                     ? null
                     : () => _handleSubmitted(_textController.text),
