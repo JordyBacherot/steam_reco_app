@@ -11,6 +11,7 @@ on:
       - "front/**"
       - "api/**"
       - "api_recommendation/**"
+      - ".github/workflows/**"
 
 jobs:
   build-front:
