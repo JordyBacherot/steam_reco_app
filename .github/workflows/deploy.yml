@@ -1,7 +1,5 @@
 name: CI/CD Pipeline
 
-# 1. Quand est-ce que cette usine se lance ?
-# -> Uniquement via le bouton manuel "Run workflow" !
 on:
   workflow_dispatch:
 
@@ -14,14 +12,12 @@ jobs:
     steps:
       - name: 📥 Checkout du code
         uses: actions/checkout@v4
-
       - name: 🔑 Connexion au GitHub Container Registry (GHCR)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: 📦 Build & Push Front-end (Flutter)
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
@@ -37,14 +33,12 @@ jobs:
     steps:
       - name: 📥 Checkout du code
         uses: actions/checkout@v4
-
       - name: 🔑 Connexion au GitHub Container Registry (GHCR)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: 📦 Build & Push API (Hono)
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
@@ -59,14 +53,12 @@ jobs:
     steps:
       - name: 📥 Checkout du code
         uses: actions/checkout@v4
-
       - name: 🔑 Connexion au GitHub Container Registry (GHCR)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: 📦 Build & Push API Recommendation (FastAPI)
         run: |
           OWNER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
