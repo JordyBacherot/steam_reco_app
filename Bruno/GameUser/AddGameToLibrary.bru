@@ -18,6 +18,8 @@ body:json {
 }
 
 assert {
-  res.status: eq 201
+  res.status: in [200, 201]
   res.body.success: eq true
+  res.body.message: isString
+  res.body.data: isJson
 }

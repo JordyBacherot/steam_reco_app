@@ -29,3 +29,11 @@ body:json {
     "limit": 5
   }
 }
+
+assert {
+  res.status: eq 200
+  res.body.source: eq manual_input
+  res.body.recommendations: isArray
+  res.body.input_count: isNumber
+  res.body.limit: isNumber
+}

@@ -4,7 +4,49 @@ on:
   workflow_dispatch:
 
 jobs:
+  test-apis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout du code
+        uses: actions/checkout@v4
+      - name: ⚙️ Configuration de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: 🛠️ Installation de Bruno CLI
+        run: npm install -g @usebruno/cli
+      - name: 📝 Création des variables d'environnement (.env) Mocks
+        run: |
+          echo "NODE_ENV=development" > ./api/.env
+          echo "JWT_SECRET=supersecret_pour_les_tests" >> ./api/.env
+          echo "DB_HOST=db" >> ./api/.env
+          echo "DB_USER=root" >> ./api/.env
+          echo "DB_PASSWORD=root" >> ./api/.env
+          echo "DB_NAME=steam_reco_app" >> ./api/.env
+          echo "API_RECOMMENDATION=http://api_recommendation:8000" >> ./api/.env
+          echo "API_KEY_RECOMMENDATION=test_key_123" >> ./api/.env
+
+          echo "MYSQL_ROOT_PASSWORD=root" > ./db/.env
+          echo "MYSQL_DATABASE=steam_reco_app" >> ./db/.env
+
+          echo "PYTHONUNBUFFERED=1" > ./api_recommendation/.env
+          echo "API_KEY=test_key_123" >> ./api_recommendation/.env
+      - name: 🐳 Lancement des APIs locales (Docker)
+        run: docker compose up -d db api api_recommendation
+      - name: ⏳ Attente d'initialisation (Base de données et serveurs)
+        run: sleep 20
+      - name: 🧪 Exécution ciblée des tests Bruno
+        run: |
+          bru run Bruno/Auth/SignUp.bru --env dev --env-var api_key=test_key_123
+          bru run Bruno/Auth/SignIn.bru --env dev --env-var api_key=test_key_123
+          bru run Bruno/GameUser/AddGameToLibrary.bru --env dev --env-var api_key=test_key_123
+          bru run Bruno/GameUser/GetUserLibrary.bru --env dev --env-var api_key=test_key_123
+          bru run "Bruno/Recommendation (Hono)/Chat Stream (Hono).bru" --env dev --env-var api_key=test_key_123
+          bru run "Bruno/Recommendation (Hono)/Manual Reco (Hono).bru" --env dev --env-var api_key=test_key_123
+          bru run "Bruno/Recommendation (Hono)/Nearest Games (Hono).bru" --env dev --env-var api_key=test_key_123
+
   build-front:
+    needs: [test-apis]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,6 +68,7 @@ jobs:
           docker push ghcr.io/$OWNER/steam-reco-front:latest
 
   build-api:
+    needs: [test-apis]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -46,6 +89,7 @@ jobs:
           docker push ghcr.io/$OWNER/steam-reco-api:latest
 
   build-reco:
+    needs: [test-apis]
     runs-on: ubuntu-latest
     permissions:
       contents: read

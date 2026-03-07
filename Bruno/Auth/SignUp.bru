@@ -26,6 +26,13 @@ vars:post-response {
 assert {
   res.status: eq 201
   res.body.success: eq true
+  res.body.message: isString
+  res.body.user: isJson
+  res.body.user.id_user: isNumber
+  res.body.user.email: isString
+  res.body.user.username: isString
+  res.body.token: isString
+  res.body.refreshToken: isString
 }
 
 settings {

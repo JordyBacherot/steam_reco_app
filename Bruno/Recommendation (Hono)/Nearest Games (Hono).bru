@@ -17,3 +17,10 @@ params:query {
 auth:bearer {
   token: {{token}}
 }
+
+assert {
+  res.status: eq 200
+  res.body.query: isString
+  res.body.found: isBoolean
+  res.body.nearest_games: isArray
+}
