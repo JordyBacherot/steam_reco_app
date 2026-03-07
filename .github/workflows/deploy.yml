@@ -25,6 +25,7 @@ jobs:
           echo "DB_NAME=steam_reco_app" >> ./api/.env
           echo "API_RECOMMENDATION=http://api_recommendation:8000" >> ./api/.env
           echo "API_KEY_RECOMMENDATION=test_key_123" >> ./api/.env
+          echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> ./api/.env
 
           echo "MYSQL_ROOT_PASSWORD=root" > ./db/.env
           echo "MYSQL_DATABASE=steam_reco_app" >> ./db/.env
