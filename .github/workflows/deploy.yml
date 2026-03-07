@@ -38,13 +38,21 @@ jobs:
       - name: 🧪 Exécution ciblée des tests Bruno
         run: |
           cd Bruno
+
+          # 1. Tests d'Authentification (pas besoin de token préalable)
           bru run Auth/SignUp.bru --env dev --env-var api_key=test_key_123
           bru run Auth/SignIn.bru --env dev --env-var api_key=test_key_123
-          bru run GameUser/AddGameToLibrary.bru --env dev --env-var api_key=test_key_123
-          bru run GameUser/GetUserLibrary.bru --env dev --env-var api_key=test_key_123
-          bru run "Recommendation (Hono)/Chat Stream (Hono).bru" --env dev --env-var api_key=test_key_123
-          bru run "Recommendation (Hono)/Manual Reco (Hono).bru" --env dev --env-var api_key=test_key_123
-          bru run "Recommendation (Hono)/Nearest Games (Hono).bru" --env dev --env-var api_key=test_key_123
+
+          # 2. Récupération d'un Token d'accès
+          # Comme les requêtes 'bru run' sont isolées, le token n'est pas sauvegardé entre elles
+          TOKEN=$(curl -s -X POST http://localhost:3000/auth/signin -H "Content-Type: application/json" -d '{"email":"test@example.com","password":"password123"}' | jq -r '.data.token')
+
+          # 3. Exécution des tests utilisateurs et protégés (injection du token)
+          bru run GameUser/AddGameToLibrary.bru --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
+          bru run GameUser/GetUserLibrary.bru --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
+          bru run "Recommendation (Hono)/Chat Stream (Hono).bru" --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
+          bru run "Recommendation (Hono)/Manual Reco (Hono).bru" --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
+          bru run "Recommendation (Hono)/Nearest Games (Hono).bru" --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
 
   build-front:
     needs: [test-apis]
