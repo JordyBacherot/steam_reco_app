@@ -5,14 +5,14 @@ class GameSearchRow extends StatelessWidget {
   final List<GameModel> availableGames;
   final GameModel? selectedGame;
   final ValueChanged<GameModel?> onGameSelected;
-  final TextEditingController ratingController;
+  final TextEditingController hoursController;
 
   const GameSearchRow({
     super.key,
     required this.availableGames,
     required this.selectedGame,
     required this.onGameSelected,
-    required this.ratingController,
+    required this.hoursController,
   });
 
   @override
@@ -51,18 +51,18 @@ class GameSearchRow extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         
-        // Rating Input
+        // Hours Input
         Expanded(
           flex: 1,
           child: Row(
             children: [
               const Text(
-                'Note: ',
+                'Heures: ',
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
               Expanded(
                 child: TextField(
-                  controller: ratingController,
+                  controller: hoursController,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(color: Colors.white),
                   textAlign: TextAlign.center,
@@ -78,7 +78,7 @@ class GameSearchRow extends StatelessWidget {
                 ),
               ),
               const Text(
-                ' /5',
+                ' h',
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],

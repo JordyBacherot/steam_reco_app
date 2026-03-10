@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:front/features/shell/bottom_nav.dart';
 import 'package:front/features/main/main_page.dart';
 import 'package:front/features/recommendations/reco_page.dart';
+import 'package:front/features/recommendations/reco_show_page.dart';
 import 'package:front/features/chatbot/chatbot_page.dart';
 import 'package:front/features/profile/profile_page.dart';
 import 'package:front/features/profile/add_games_page.dart';
@@ -89,6 +90,15 @@ GoRouter _createRouter(AuthService authService) {
               GoRoute(
                 path: '/reco',
                 builder: (context, state) => const RecoPage(),
+                routes: [
+                  GoRoute(
+                    path: 'show', // Sub-route becomes /reco/show
+                    builder: (context, state) {
+                      final type = state.uri.queryParameters['type'] ?? 'steam';
+                      return RecoShowPage(type: type);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

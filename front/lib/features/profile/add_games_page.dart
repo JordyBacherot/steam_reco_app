@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:front/models/game_model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:front/core/network/api_client.dart';
+import 'package:front/services/auth_service.dart';
 import 'package:front/features/profile/widgets/game_search_row.dart';
 import 'package:front/features/profile/widgets/game_preview_card.dart';
 import 'package:front/features/profile/widgets/added_game_card.dart';
@@ -13,6 +16,9 @@ class AddGamesPage extends StatefulWidget {
 }
 
 class _AddGamesPageState extends State<AddGamesPage> {
+  final ApiClient _apiClient = ApiClient();
+  bool _isLoading = true;
+
   // Fake game database for the dropdown
   final List<GameModel> _availableGames = [
     const GameModel(
@@ -37,36 +43,148 @@ class _AddGamesPageState extends State<AddGamesPage> {
     ),
   ];
 
-  // List of games already added by the user
-  final List<Map<String, dynamic>> _addedGames = [];
+  // List of games already added by the user (fetched from backend)
+  List<Map<String, dynamic>> _addedGames = [];
 
   GameModel? _selectedGame;
-  final TextEditingController _ratingController = TextEditingController();
+  final TextEditingController _hoursController = TextEditingController();
 
-  void _addGame() {
-    if (_selectedGame != null && _ratingController.text.isNotEmpty) {
-      final rating = int.tryParse(_ratingController.text);
-      if (rating != null && rating >= 0 && rating <= 5) {
-        setState(() {
-          _addedGames.add({
-            'game': _selectedGame,
-            'rating': rating,
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchUserGames();
+    });
+  }
+
+  Future<void> _fetchUserGames() async {
+    final authService = context.read<AuthService>();
+    final userId = authService.currentUser?['id'] ?? authService.currentUser?['id_user'];
+    
+    if (userId == null) {
+      if (mounted) setState(() => _isLoading = false);
+      return;
+    }
+
+    try {
+      final response = await _apiClient.dio.get('/users/$userId/games');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data['data'] ?? [];
+        
+        final List<Map<String, dynamic>> mappedGames = data.map((item) {
+          final gameData = item['game'] ?? {};
+          final gameModel = GameModel(
+            id: gameData['id_game']?.toString() ?? item['id_game'].toString(),
+            title: gameData['name'] ?? 'Jeu inconnu',
+            imageUrl: gameData['image_url'] ?? 'https://picsum.photos/id/237/200/300',
+          );
+          return {
+            'game': gameModel,
+            'hours': item['nb_hours'],
+          };
+        }).toList();
+
+        if (mounted) {
+          setState(() {
+            _addedGames = mappedGames;
+            _isLoading = false;
           });
-          // Reset selection
-          _selectedGame = null;
-          _ratingController.clear();
-        });
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to load user games: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _addGame() async {
+    if (_selectedGame != null && _hoursController.text.isNotEmpty) {
+      final hours = int.tryParse(_hoursController.text);
+      if (hours != null && hours >= 0) {
+        final authService = context.read<AuthService>();
+        final userId = authService.currentUser?['id'] ?? authService.currentUser?['id_user'];
+
+        if (userId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Erreur: Utilisateur non connecté')),
+          );
+          return;
+        }
+
+        try {
+          final response = await _apiClient.dio.post(
+            '/users/$userId/games',
+            data: {
+              'id_game': int.parse(_selectedGame!.id),
+              'nb_hours': hours,
+              'game_title': _selectedGame!.title,
+              'game_image_url': _selectedGame!.imageUrl,
+            },
+          );
+
+          if (response.statusCode == 200 || response.statusCode == 201) {
+            // Re-fetch library
+            await _fetchUserGames();
+            
+            // Re-fetch global count for recommendations page unlock
+            authService.fetchUserGamesCount();
+            
+            if (mounted) {
+              setState(() {
+                _selectedGame = null;
+                _hoursController.clear();
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Jeu ajouté avec succès !")),
+              );
+            }
+          }
+        } catch (e) {
+          debugPrint('Failed to add game: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Erreur lors de l'ajout du jeu")),
+            );
+          }
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Veuillez entrer une note valide entre 0 et 5')),
+          const SnackBar(content: Text("Veuillez entrer un nombre d'heures valide")),
         );
       }
     }
   }
 
+  Future<void> _deleteGame(String gameId) async {
+    final authService = context.read<AuthService>();
+    final userId = authService.currentUser?['id'] ?? authService.currentUser?['id_user'];
+
+    if (userId == null) return;
+
+    try {
+      final response = await _apiClient.dio.delete('/users/$userId/games/$gameId');
+      if (response.statusCode == 200) {
+        
+        // Refresh global count
+        authService.fetchUserGamesCount();
+
+        if (mounted) {
+          setState(() {
+            _addedGames.removeWhere((item) => (item['game'] as GameModel).id == gameId);
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Jeu retiré de la bibliothèque')),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to delete game: $e');
+    }
+  }
+
   @override
   void dispose() {
-    _ratingController.dispose();
+    _hoursController.dispose();
     super.dispose();
   }
 
@@ -82,7 +200,9 @@ class _AddGamesPageState extends State<AddGamesPage> {
           onPressed: () => context.pop(),
         ),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: Color(0xFF66c0f4)))
+        : SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -106,7 +226,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
                   _selectedGame = newValue;
                 });
               },
-              ratingController: _ratingController,
+              hoursController: _hoursController,
             ),
             const SizedBox(height: 24),
 
@@ -150,16 +270,12 @@ class _AddGamesPageState extends State<AddGamesPage> {
                 itemBuilder: (context, index) {
                   final item = _addedGames[index];
                   final GameModel game = item['game'];
-                  final int rating = item['rating'];
+                  final int hours = item['hours'];
 
                   return AddedGameCard(
                     game: game,
-                    rating: rating,
-                    onDelete: () {
-                      setState(() {
-                        _addedGames.removeAt(index);
-                      });
-                    },
+                    hours: hours,
+                    onDelete: () => _deleteGame(game.id),
                   );
                 },
               ),

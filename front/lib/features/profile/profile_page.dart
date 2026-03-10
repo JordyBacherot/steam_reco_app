@@ -117,8 +117,13 @@ class ProfilePage extends StatelessWidget {
             width: double.infinity,
             height: 50,
             child: OutlinedButton(
-              onPressed: () {
-                // TODO: Clear local authentication tokens and route back to login screen
+              onPressed: () async {
+                final authService = context.read<AuthService>();
+                await authService.logout();
+                // We do not need to call context.go('/sign-in') here because 
+                // in main.dart, GoRouter has `refreshListenable: authService`,
+                // meaning it will automatically run its `redirect` logic and 
+                // kick the user to '/sign-in' as soon as logout() calls notifyListeners().
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.redAccent,

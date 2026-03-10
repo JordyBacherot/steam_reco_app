@@ -3,13 +3,13 @@ import 'package:front/models/game_model.dart';
 
 class AddedGameCard extends StatelessWidget {
   final GameModel game;
-  final int rating;
+  final int hours;
   final VoidCallback onDelete;
 
   const AddedGameCard({
     super.key,
     required this.game,
-    required this.rating,
+    required this.hours,
     required this.onDelete,
   });
 
@@ -25,7 +25,7 @@ class AddedGameCard extends StatelessWidget {
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-            // Rating
+            // Hours
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
@@ -33,7 +33,7 @@ class AddedGameCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                '$rating/5',
+                '$hours h',
                 style: const TextStyle(
                   color: Color(0xFF66c0f4),
                   fontWeight: FontWeight.bold,

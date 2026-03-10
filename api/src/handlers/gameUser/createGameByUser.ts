@@ -1,6 +1,7 @@
 import { Context } from 'hono';
 import { AppDataSource } from "../../database/data-source";
 import { GameUser } from '../../entities/GameUser';
+import { Game } from '../../entities/Game';
 import { HTTPException } from 'hono/http-exception';
 
 /**
@@ -10,20 +11,32 @@ import { HTTPException } from 'hono/http-exception';
  */
 export async function createGameUser(c: Context) {
     const gamesUsersRepository = AppDataSource.getRepository(GameUser);
+    const gamesRepository = AppDataSource.getRepository(Game);
 
     try {
-        // 1. Extraction de l'ID depuis l'URL (ex: /users/123/games)
+        // 1. Extraction de l'ID depuis l'URL
         const userId = Number(c.req.param('userId'));
 
-        // 2. Extraction des données depuis le corps de la requête (JSON)
-        const { id_game, nb_hours } = await c.req.json();
+        // 2. Extraction des données (inclut maintenant metadata du jeu)
+        const { id_game, nb_hours, game_title, game_image_url } = await c.req.json();
 
         // 3. Validation de sécurité
         if (isNaN(userId) || isNaN(id_game)) {
             return c.json({ success: false, message: "IDs invalides" }, 400);
         }
 
-        // 4. Logique TypeORM : On cherche si l'entrée existe déjà
+        // 4. Upsert du Jeu (Foreign Key constraint prevention)
+        let gameRecord = await gamesRepository.findOneBy({ id_game: id_game });
+        if (!gameRecord) {
+            gameRecord = gamesRepository.create({
+                id_game: id_game,
+                name: game_title || "Unknown Game",
+                image_url: game_image_url || "https://picsum.photos/id/237/200/300"
+            });
+            await gamesRepository.save(gameRecord);
+        }
+
+        // 5. Logique TypeORM : On cherche si l'entrée utlisateur existe déjà
         let record = await gamesUsersRepository.findOneBy({
             id_user: userId,
             id_game: id_game
@@ -53,10 +66,10 @@ export async function createGameUser(c: Context) {
             success: true,
             message: "Jeu ajouté à la bibliothèque",
             data: newRecord
-        }, 201); // 201 = Created
+        }, 201);
     } catch (error) {
         if (error instanceof HTTPException) throw error;
-        console.error(error);
+        console.error("DEBUG ERROR ADD GAME:", error);
         throw new HTTPException(500, { message: "Erreur lors de l'ajout du jeu à la bibliothèque" });
     }
 }

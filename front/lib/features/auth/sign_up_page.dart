@@ -166,6 +166,8 @@ class _SignUpPageState extends State<SignUpPage> {
 
                   setState(() => _isLoading = true);
                   
+                  final steamId = _steamIdController.text.trim();
+                  
                   final authService = context.read<AuthService>();
                   final success = await authService.signUp(username, email, password);
                   
