@@ -10,6 +10,7 @@
     "@langchain/core": "^1.1.19",
     "@langchain/groq": "^1.0.4",
     "axios": "^1.13.2",
+    "csv-parser": "^3.2.0",
     "hono": "^4.11.3",
     "mysql2": "^3.16.0",
     "reflect-metadata": "^0.2.2",
