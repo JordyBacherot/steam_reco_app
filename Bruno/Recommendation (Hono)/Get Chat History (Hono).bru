@@ -1,0 +1,25 @@
+meta {
+  name: Get Chat History (Hono)
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{host}}/recommendations/history/chat?limit=10
+  body: none
+  auth: bearer
+}
+
+params:query {
+  limit: 10
+}
+
+auth:bearer {
+  token: {{token}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.history_chat: isArray
+  res.body.count: isNumber
+}

@@ -20,6 +20,9 @@ export class ChatbotRecommendation {
   @JoinColumn({ name: "id_user" })
   user!: User;
 
+  @Column("uuid", { nullable: true })
+  session_id!: string;
+
   @Column("text")
   response!: string;
 

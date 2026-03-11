@@ -16,7 +16,6 @@ import gameRoutes from "./routes/game";
 import reviewRoutes from "./routes/review";
 import steamUserRoutes from "./routes/steamUser";
 import gameUserRoutes from "./routes/gameUser";
-import nearGameRoutes from "./routes/nearGame";
 
 /**
  * ============================================================================
@@ -41,6 +40,7 @@ app.use(
     ],
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "Accept"],
+    exposeHeaders: ["X-Session-ID"], // Pousser le session_id au frontend !
     credentials: true,
   }),
 );
@@ -95,9 +95,6 @@ app.route("/steam_users", steamUserRoutes);
 
 // Mounting GameUser routes under /users so paths become /users/:userId/games
 app.route("/users", gameUserRoutes);
-
-// Mounting NearGame Manual routes
-app.route("/near_games", nearGameRoutes);
 
 // GESTION DES ERREURS
 // 404 - Not Found

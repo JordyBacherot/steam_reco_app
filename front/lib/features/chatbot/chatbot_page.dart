@@ -37,6 +37,18 @@ class _ChatbotPageState extends State<ChatbotPage> {
   // Instanciation de notre service API
   final ChatbotService _chatbotService = ChatbotService();
 
+  // Permet à l'utilisateur de réinitialiser le contexte de la discussion
+  void _resetConversation() {
+    setState(() {
+      _messages.clear();
+      _chatbotService.resetSession();
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Nouvelle discussion démarrée.")),
+    );
+  }
+
   // Déclenché quand l'utilisateur clique sur "Envoyer" (ou touche Entrée)
   Future<void> _handleSubmitted(String text) async {
     if (text.trim().isEmpty) return; // Ignore les messages vides
@@ -209,6 +221,13 @@ class _ChatbotPageState extends State<ChatbotPage> {
       appBar: AppBar(
         title: const Text('Assistant IA'),
         elevation: 1,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Nouvelle discussion',
+            onPressed: _isLoading ? null : _resetConversation,
+          )
+        ],
       ),
       body: Column(
         children: [

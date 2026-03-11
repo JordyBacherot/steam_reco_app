@@ -2,6 +2,9 @@ import { Context } from "hono";
 import { ChatGroq } from "@langchain/groq";
 import { HumanMessage, SystemMessage, AIMessage, BaseMessage } from "@langchain/core/messages";
 import { streamText } from 'hono/streaming';
+import crypto from "crypto";
+import { AppDataSource } from "../../database/data-source";
+import { ChatbotRecommendation } from "../../entities/ChatbotRecommendation";
 
 /**
  * Interface pour le corps de la requête Chat
@@ -11,6 +14,7 @@ interface ChatRequestBody {
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
   gamesList: Array<{ name: string; hours: number }>; // Liste des jeux joués
   temperature?: number;
+  session_id?: string; // ID de la session de chat
 }
 
 /**
@@ -20,12 +24,18 @@ interface ChatRequestBody {
 export const streamChatHandler = async (c: Context) => {
   try {
     const body = await c.req.json<ChatRequestBody>();
-    const { message, history, gamesList, temperature = 0.2 } = body;
+    const { message, history, gamesList, temperature = 0.2, session_id } = body;
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
       return c.json({ error: "GROQ_API_KEY is missing" }, 500);
     }
+    
+    // Check user authentication
+    const userId = c.get("userId");
+    
+    // Resolve or generate Session ID
+    const sessionId = session_id || crypto.randomUUID();
 
     // 1. Initialisation du modèle Groq
     const model = new ChatGroq({
@@ -78,20 +88,43 @@ export const streamChatHandler = async (c: Context) => {
     c.header('X-Accel-Buffering', 'no'); 
     c.header('Cache-Control', 'no-cache');
     c.header('Connection', 'keep-alive');
-    c.header('Content-Type', 'text/plain; charset=utf-8');
+    c.header('Content-Type', 'application/x-ndjson; charset=utf-8');
 
     return streamText(c, async (stream) => {
+      let fullResponse = "";
       try {
         const chatStream = await model.stream(messages);
 
         for await (const chunk of chatStream) {
           if (chunk.content) {
-            await stream.write(chunk.content as string);
+            fullResponse += chunk.content;
+            
+            // On envoie un dictionnaire JSON à chaque morceau (NDJSON)
+            const payload = JSON.stringify({
+              session_id: sessionId,
+              message: chunk.content
+            });
+            await stream.write(payload + "\n");
           }
         }
       } catch (err) {
         console.error("Chat Stream Error:", err);
         await stream.write("\n[ERROR: Stream failed]");
+      } finally {
+        // Sauvegarde de l'historique une fois le stream terminé
+        if (userId && fullResponse.trim().length > 0) {
+          try {
+             const chatRepo = AppDataSource.getRepository(ChatbotRecommendation);
+             const chatReco = new ChatbotRecommendation();
+             chatReco.id_user = userId;
+             chatReco.session_id = sessionId;
+             chatReco.response = fullResponse;
+             await chatRepo.save(chatReco);
+             console.log(`[DB] Saved ChatbotRecommendation for user ${userId}, session ${sessionId}`);
+          } catch (dbError) {
+             console.error("Failed to save ChatbotRecommendation:", dbError);
+          }
+        }
       }
     });
 

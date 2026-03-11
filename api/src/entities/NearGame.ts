@@ -2,7 +2,8 @@ import {
   Entity,
   PrimaryColumn,
   ManyToOne,
-  JoinColumn
+  JoinColumn,
+  Column
 } from "typeorm";
 import { Game } from "./Game";
 
@@ -13,6 +14,9 @@ export class NearGame {
 
   @PrimaryColumn()
   id_near_game!: number;
+
+  @Column("float", { nullable: true })
+  score!: number;
 
   @ManyToOne(() => Game, (game) => game.nearGamesList)
   @JoinColumn({ name: "id_game" })
