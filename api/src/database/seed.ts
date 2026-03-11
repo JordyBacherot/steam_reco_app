@@ -5,6 +5,9 @@ import { Game } from "../entities/Game";
 import { SteamUser } from "../entities/SteamUser";
 import { GameUser } from "../entities/GameUser";
 import { Review } from "../entities/Review";
+import * as fs from "fs";
+import * as path from "path";
+import csv from "csv-parser";
 
 /**
  * Script de pré-remplissage (Seed) de la base de données.
@@ -18,65 +21,69 @@ export const seedDatabase = async () => {
     }
     console.log("Database connected. Checking for existing data...");
 
-    // Si des utilisateurs existent déjà, on n'ajoute pas les données par défaut.
+    // 1. Création User (Si nécessaire)
     const userCount = await AppDataSource.manager.count(User);
-    if (userCount > 0) {
-        console.log("Data already exists. Skipping seed.");
-        return;
+    let user: User | null = null;
+    
+    if (userCount === 0) {
+      console.log("Creating default user...");
+      user = new User();
+      user.username = "testuser";
+      user.email = "test@example.com";
+      user.password = await Bun.password.hash("password123");
+      user.have_steamid = true;
+      await AppDataSource.manager.save(user);
+      console.log("User created:", user.id_user);
+
+      // 2. Création SteamUser
+      const steamUser = new SteamUser();
+      steamUser.id_steam = "76561198000000000";
+      steamUser.username_steam = "SteamTestUser";
+      steamUser.user = user;
+      steamUser.id_user = user.id_user;
+      await AppDataSource.manager.save(steamUser);
+      console.log("SteamUser created");
+    } else {
+      console.log("Users already exist. Skipping user creation.");
+      user = await AppDataSource.manager.findOneBy(User, { username: "testuser" });
     }
 
-    console.log("Seeding...");
+    // 3. Création Jeux (Import depuis CSV)
+    const gameCount = await AppDataSource.manager.count(Game);
+    if (gameCount < 100) {
+      console.log("Importing games from games_full.csv...");
+      await importGamesFromCSV();
+      console.log("Games imported successfully.");
+    } else {
+      console.log("Games already exist in database. Skipping import.");
+    }
 
-    // 1. Création User
-    // TODO : Supprimer le user en production
-    const user = new User();
-    user.username = "testuser";
-    user.email = "test@example.com";
-    user.password = await Bun.password.hash("password123"); // Mot de passe réel haché
-    user.have_steamid = true;
-    await AppDataSource.manager.save(user);
-    console.log("User created:", user.id_user);
+    // 4. Création Bibliothèque et Review (Exemple avec des jeux importés)
+    if (user) {
+      const games = await AppDataSource.manager.find(Game, { take: 2 });
+      if (games.length >= 2) {
+        const game1 = games[0];
+        const game2 = games[1];
 
-    // 2. Création SteamUser
-    const steamUser = new SteamUser();
-    steamUser.id_steam = "76561198000000000";
-    steamUser.username_steam = "SteamTestUser";
-    steamUser.user = user;
-    steamUser.id_user = user.id_user;
-    await AppDataSource.manager.save(steamUser);
-    console.log("SteamUser created");
+        // Bibliothèque (Liaison User <-> Game)
+        const libraryEntry = new GameUser();
+        libraryEntry.user = user;
+        libraryEntry.game = game1;
+        libraryEntry.nb_hours = 150.5;
+        await AppDataSource.manager.save(libraryEntry);
+        console.log("Library entry created for game:", game1.name);
 
-    // 3. Création Jeux
-    const game1 = new Game();
-    game1.id_game = 10;
-    game1.name = "Counter-Strike";
-    game1.description = "The classic shooter.";
-    await AppDataSource.manager.save(game1);
-
-    const game2 = new Game();
-    game2.id_game = 220;
-    game2.name = "Half-Life 2";
-    game2.description = "Best game ever.";
-    await AppDataSource.manager.save(game2);
-    console.log("Games created");
-
-    // 4. Création Bibliothèque (Liaison User <-> Game)
-    const libraryEntry = new GameUser();
-    libraryEntry.user = user;
-    libraryEntry.game = game1;
-    libraryEntry.nb_hours = 150.5;
-    await AppDataSource.manager.save(libraryEntry);
-    console.log("Library entry created");
-
-    // 5. Création Review
-    const review = new Review();
-    review.user = user;
-    review.game = game2;
-    review.text = "Masterpiece.";
-    review.id_game = game2.id_game;
-    review.id_user = user.id_user;
-    await AppDataSource.manager.save(review);
-    console.log("Review created");
+        // Review
+        const review = new Review();
+        review.user = user;
+        review.game = game2;
+        review.text = "Masterpiece.";
+        review.id_game = game2.id_game;
+        review.id_user = user.id_user;
+        await AppDataSource.manager.save(review);
+        console.log("Review created for game:", game2.name);
+      }
+    }
 
     console.log("Seeding complete!");
   } catch (error) {
@@ -84,6 +91,66 @@ export const seedDatabase = async () => {
     throw error;
   }
 };
+
+/**
+ * Importe les jeux depuis le fichier CSV par lots pour optimiser les performances.
+ */
+async function importGamesFromCSV() {
+  const csvFilePath = path.resolve(import.meta.dir, "../../data/games_full.csv");
+  const BATCH_SIZE = 1000;
+  let batch: any[] = [];
+
+  return new Promise<void>((resolve, reject) => {
+    const stream = fs.createReadStream(csvFilePath)
+      .pipe(csv());
+
+    stream.on("data", async (data) => {
+      batch.push({
+        id_game: parseInt(data.appid),
+        name: data.name,
+        description: data.description,
+        image_url: data.image_url,
+        mean_review: data.mean_review ? parseFloat(data.mean_review) : null,
+        studio: data.developer,
+      });
+
+      if (batch.length >= BATCH_SIZE) {
+        stream.pause(); // Pause le stream pour ne pas saturer la mémoire
+        const currentBatch = [...batch];
+        batch = [];
+        try {
+          await AppDataSource.createQueryBuilder()
+            .insert()
+            .into(Game)
+            .values(currentBatch)
+            .orIgnore()
+            .execute();
+        } catch (err) {
+          console.error("Batch insert error:", err);
+        }
+        stream.resume(); // Reprend une fois l'insertion terminée
+      }
+    });
+
+    stream.on("end", async () => {
+      if (batch.length > 0) {
+        try {
+          await AppDataSource.createQueryBuilder()
+            .insert()
+            .into(Game)
+            .values(batch)
+            .orIgnore()
+            .execute();
+        } catch (err) {
+          console.error("Final batch insert error:", err);
+        }
+      }
+      resolve();
+    });
+
+    stream.on("error", reject);
+  });
+}
 
 // Exécution directe si lancé via CLI (`bun run src/database/seed.ts`)
 if (import.meta.main) {
