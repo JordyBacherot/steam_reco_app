@@ -12,7 +12,11 @@ class ChatbotPage extends StatefulWidget {
 
 class _ChatbotPageState extends State<ChatbotPage> {
   // Liste qui stocke tout l'historique de la conversation actuelle
-  final List<ChatMessage> _messages = [];
+  final List<ChatMessage> _messages = [
+    ChatMessage(
+        role: 'assistant',
+        content: "Salut ! Je suis ton conseiller jeu vidéo personnel. Dis-moi ce que tu aimes, je te trouve ta prochaine pépite ! 🎮")
+  ];
 
   // Contrôleur pour lire et effacer ce que l'utilisateur tape dans le champ de texte
   final TextEditingController _textController = TextEditingController();
@@ -41,6 +45,11 @@ class _ChatbotPageState extends State<ChatbotPage> {
   void _resetConversation() {
     setState(() {
       _messages.clear();
+      _messages.add(
+        ChatMessage(
+            role: 'assistant',
+            content: "Salut ! Je suis ton conseiller jeu vidéo personnel. Dis-moi ce que tu aimes, je te trouve ta prochaine pépite ! 🎮")
+      );
       _chatbotService.resetSession();
     });
     

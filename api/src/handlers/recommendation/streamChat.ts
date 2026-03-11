@@ -5,6 +5,7 @@ import { streamText } from 'hono/streaming';
 import crypto from "crypto";
 import { AppDataSource } from "../../database/data-source";
 import { ChatbotRecommendation } from "../../entities/ChatbotRecommendation";
+import { GameUser } from "../../entities/GameUser";
 
 /**
  * Interface pour le corps de la requête Chat
@@ -12,7 +13,6 @@ import { ChatbotRecommendation } from "../../entities/ChatbotRecommendation";
 interface ChatRequestBody {
   message?: string; // Message optionnel si on veut juste envoyer des jeux sans message
   history: Array<{ role: 'user' | 'assistant'; content: string }>;
-  gamesList: Array<{ name: string; hours: number }>; // Liste des jeux joués
   temperature?: number;
   session_id?: string; // ID de la session de chat
 }
@@ -24,7 +24,7 @@ interface ChatRequestBody {
 export const streamChatHandler = async (c: Context) => {
   try {
     const body = await c.req.json<ChatRequestBody>();
-    const { message, history, gamesList, temperature = 0.2, session_id } = body;
+    const { message, history, temperature = 0.2, session_id } = body;
 
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey) {
@@ -33,6 +33,9 @@ export const streamChatHandler = async (c: Context) => {
     
     // Check user authentication
     const userId = c.get("userId");
+    if (!userId) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
     
     // Resolve or generate Session ID
     const sessionId = session_id || crypto.randomUUID();
@@ -44,32 +47,48 @@ export const streamChatHandler = async (c: Context) => {
       temperature: temperature,
     });
 
-    // 2. Construction du Prompt Système
-    // On met en forme la liste des jeux pour que le LLM puisse l'analyser
-    const gamesContext = gamesList
-      .map(g => `- ${g.name} (${g.hours} heures)`)
-      .join("\n");
+    // 2. Recherche des jeux possédés par l'utilisateur en BDD
+    const gamesRepo = AppDataSource.getRepository(GameUser);
+    const userGamesInfos = await gamesRepo.find({
+      where: { id_user: userId },
+      relations: ['game']
+    });
 
-    const systemPromptContent = 
+    // 3. Construction dynamique du Prompt Système
+    let systemPromptContent = 
       `Tu es un expert passionné en jeux vidéo, spécialisé dans la recommandation personnalisée.
       
-      Ton objectif est de conseiller de nouveaux jeux à l'utilisateur en analysant sa bibliothèque actuelle et ses temps de jeu.
-      Essaie de comprendre ses goûts implicites (RPG, FPS, stratégie, jeux narratifs, difficulté, rythme...) à travers les jeux qu'il a poncés.
-      
-      Voici la liste des jeux auxquels l'utilisateur a joué (Jeu : Heures jouées) :
-      ${gamesContext}
-      
-      Si l'utilisateur pose une question, réponds-y en tenant compte de ce profil.
-      Si l'utilisateur ne dit rien de précis, propose une analyse de ses goûts et 2-3 recommandations pertinentes.
-      Sois convivial, précis et pertinent.
-      
-      RÈGLE DE FORMATAGE TRÈS IMPORTANTE : 
-      Utilise UNIQUEMENT du Markdown standard pour la mise en forme (**, *, -, etc.).
-      N'utilise JAMAIS de balises HTML (comme <br>, <b>, <i>). Fais de vrais retours à la ligne au lieu de <br>.`;
+Ton objectif est de conseiller de nouveaux jeux à l'utilisateur en analysant sa bibliothèque actuelle et ses temps de jeu.
+Essaie de comprendre ses goûts implicites (RPG, FPS, stratégie, jeux narratifs, difficulté, rythme...) à travers les jeux qu'il a poncés.\n\n`;
+
+    if (userGamesInfos.length > 0) {
+      const gamesContext = userGamesInfos
+        .filter(gu => gu.game) // Sécurité si une relation est vide
+        .map(gu => `- ${gu.game.name} (${gu.nb_hours} heures)`)
+        .join("\n");
+        
+      systemPromptContent += `Voici la liste des jeux auxquels l'utilisateur a joué (Jeu : Heures jouées) :
+${gamesContext}
+
+Si l'utilisateur pose une question, réponds-y en tenant compte de ce profil. Précise-lui bien que ta recommandation est faite à partir des jeux qu'il a indiqués dans son profil.
+Si l'utilisateur ne dit rien de précis, propose une analyse de ses goûts et 2-3 recommandations pertinentes.`;
+
+    } else {
+      systemPromptContent += `Cependant, je vois que l'utilisateur n'a pas encore ajouté de jeux dans sa bibliothèque.
+Demande-lui simplement de te donner 2 ou 3 exemples de jeux ou de genres qu'il apprécie dans la discussion, ou invite-le à remplir son profil.
+Garde un ton léger, ne lui demande pas une liste complète. Tu peux lui demander ses gouts aussi, fais lui des premières recommandations de jeux, puis pour les affiner tu peux lui demander des détails. `;
+    }
+
+    // Directives globales
+    systemPromptContent += `\n\nSois convivial, précis et pertinent.
+
+RÈGLE DE FORMATAGE TRÈS IMPORTANTE : 
+Utilise UNIQUEMENT du Markdown standard pour la mise en forme (**, *, -, etc.).
+N'utilise JAMAIS de balises HTML (comme <br>, <b>, <i>). Fais de vrais retours à la ligne au lieu de <br>.`;
 
     const systemMessage = new SystemMessage(systemPromptContent);
 
-    // 3. Conversion de l'historique (format JSON -> format LangChain)
+    // 4. Conversion de l'historique (format JSON -> format LangChain)
     const langchainHistory: BaseMessage[] = history.map((msg) => {
       if (msg.role === 'user') return new HumanMessage(msg.content);
       return new AIMessage(msg.content);

@@ -18,8 +18,6 @@ class ChatbotService {
     print("[ChatbotService] Session réinitialisée.");
   }
 
-
-
   /// Envoie un message au chatbot et retourne la réponse sous forme de flux (Stream).
   /// Sur Web, XmlHttpRequest ne gère pas bien les streams natifs en écriture,
   /// on utilise un appel HTTP manuel natif pour lire en flux continu octet par octet.
@@ -46,7 +44,6 @@ class ChatbotService {
       final Map<String, dynamic> bodyData = {
         "message": message,
         "history": history.map((m) => m.toJson()).toList(),
-        "gamesList": [],
       };
 
       // Si on a déjà commencé une session, on passe l'ID
@@ -69,28 +66,44 @@ class ChatbotService {
         currentSessionId = response.headers['x-session-id'];
       }
 
-      // On écoute le flux d'octets, qu'on décode en UTF-8, puis on le coupe par ligne
-      await for (final line in response.stream
-          .transform(utf8.decoder)
-          .transform(const LineSplitter())) {
-        
-        if (line.trim().isEmpty) continue;
+      // On écoute le flux d'octets, qu'on décode en UTF-8 à la volée.
+      // Au lieu d'utiliser LineSplitter (qui casse si le JSON contient "\n"),
+      // on parse le stream en accumulant un buffer et en cherchant la séparation "\n" typique du NDJSON.
+      String buffer = "";
+      await for (final chunk in response.stream.transform(utf8.decoder)) {
+        buffer += chunk;
 
-        try {
-          final data = jsonDecode(line);
-          
-          if (data['session_id'] != null) {
-            currentSessionId = data['session_id'];
-          }
-          
-          if (data['message'] != null) {
-            final msgChunk = data['message'] as String;
-            if (msgChunk.isNotEmpty) {
-              yield msgChunk.replaceAll('<br>', '\n').replaceAll('<br/>', '\n');
+        // Tant qu'on a un retour à la ligne dans le buffer
+        int newlineIndex;
+        while ((newlineIndex = buffer.indexOf('\n')) != -1) {
+          // On extrait la ligne complète
+          String line = buffer.substring(0, newlineIndex).trim();
+          buffer = buffer.substring(newlineIndex + 1); // Reste
+
+          if (line.isEmpty) continue;
+
+          try {
+            final data = jsonDecode(line);
+
+            if (data['session_id'] != null) {
+              currentSessionId = data['session_id'];
             }
+
+            if (data['message'] != null) {
+              final msgChunk = data['message'] as String;
+              if (msgChunk.isNotEmpty) {
+                // Remplacement des sauts de ligne si besoin
+                yield msgChunk
+                    .replaceAll('<br>', '\n')
+                    .replaceAll('<br/>', '\n');
+              }
+            }
+          } catch (e) {
+            // S'il y a une erreur de parsing (ex: JSON incomplet),
+            // on remet la ligne dans le buffer (en réajoutant le \n) pour attendre la suite du flux.
+            buffer = line + '\n' + buffer;
+            break; // On sort du while pour attendre le prochain 'chunk'
           }
-        } catch (e) {
-          print("Erreur de parsing JSON sur le chunk : $line");
         }
       }
     } catch (e) {
