@@ -10,9 +10,6 @@ post {
   auth: bearer
 }
 
-headers {
-  x-session-id: 641cdde5-ae28-432c-a687-812b628052a3
-}
 
 auth:bearer {
   token: {{token}}
@@ -20,6 +17,7 @@ auth:bearer {
 
 body:json {
   {
+    "session_id": "641cdde5-ae28-432c-a687-812b628052a3",
     "message": "Autre chose ? ",
     "history": [],
     "gamesList": [
@@ -42,5 +40,4 @@ body:json {
 
 assert {
   res.status: eq 200
-  res.headers["x-session-id"]: isDefined
 }
