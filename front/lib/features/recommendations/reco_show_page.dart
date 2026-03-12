@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
 import 'package:front/core/network/api_client.dart';
+import 'package:go_router/go_router.dart';
 
 /// The [RecoShowPage] displays recommendations based on the `type`
 /// passed in the route ('steam' or 'manual').
@@ -244,73 +245,87 @@ class _RecoShowPageState extends State<RecoShowPage> {
             final String desc = reco['description'] ?? reco['short_description'] ?? 'Pas de description';
             
             return Card(
+              clipBehavior: Clip.hardEdge, // Empêche l'animation de clic de déborder des coins arrondis
               color: const Color(0xFF171a21),
               elevation: 4,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Game Image Cover
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: image != null
-                          ? Image.network(
-                              image,
-                              width: 120,
-                              height: 65,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
+              // On enveloppe le Padding dans un InkWell pour rendre la carte cliquable
+              child: InkWell(
+                onTap: () {
+                  if (appid != null) {
+                    // Navigation vers la page de détail du jeu
+                    context.push('/reco/game/$appid');
+                  } else {
+                    // Sécurité si l'API n'a pas renvoyé d'ID
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Détails indisponibles pour ce jeu.")),
+                    );
+                  }
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: image != null
+                            ? Image.network(
+                                image,
+                                width: 120,
+                                height: 65,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                  width: 120,
+                                  height: 65,
+                                  color: Colors.grey[800],
+                                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                                ),
+                              )
+                            : Container(
                                 width: 120,
                                 height: 65,
                                 color: Colors.grey[800],
-                                child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                                child: const Icon(Icons.videogame_asset, color: Colors.grey),
                               ),
-                            )
-                          : Container(
-                              width: 120,
-                              height: 65,
-                              color: Colors.grey[800],
-                              child: const Icon(Icons.videogame_asset, color: Colors.grey),
-                            ),
-                    ),
-                    const SizedBox(width: 16),
-                    
-                    // Texts
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            desc,
-                            style: TextStyle(
-                              color: Colors.grey[400],
-                              fontSize: 12,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 16),
+                      
+                      // Texts
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              desc,
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 12,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              ), 
             );
           },
         ),
