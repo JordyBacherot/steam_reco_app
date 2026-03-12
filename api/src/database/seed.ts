@@ -1,10 +1,6 @@
 import "reflect-metadata";
 import { AppDataSource } from "./data-source";
-import { User } from "../entities/User";
 import { Game } from "../entities/Game";
-import { SteamUser } from "../entities/SteamUser";
-import { GameUser } from "../entities/GameUser";
-import { Review } from "../entities/Review";
 import * as fs from "fs";
 import * as path from "path";
 import csv from "csv-parser";
@@ -21,34 +17,7 @@ export const seedDatabase = async () => {
     }
     console.log("Database connected. Checking for existing data...");
 
-    // 1. Création User (Si nécessaire)
-    const userCount = await AppDataSource.manager.count(User);
-    let user: User | null = null;
-    
-    if (userCount === 0) {
-      console.log("Creating default user...");
-      user = new User();
-      user.username = "testuser";
-      user.email = "test@example.com";
-      user.password = await Bun.password.hash("password123");
-      user.have_steamid = true;
-      await AppDataSource.manager.save(user);
-      console.log("User created:", user.id_user);
-
-      // 2. Création SteamUser
-      const steamUser = new SteamUser();
-      steamUser.id_steam = "76561198000000000";
-      steamUser.username_steam = "SteamTestUser";
-      steamUser.user = user;
-      steamUser.id_user = user.id_user;
-      await AppDataSource.manager.save(steamUser);
-      console.log("SteamUser created");
-    } else {
-      console.log("Users already exist. Skipping user creation.");
-      user = await AppDataSource.manager.findOneBy(User, { username: "testuser" });
-    }
-
-    // 3. Création Jeux (Import depuis CSV)
+    // 1. Création Jeux (Import depuis CSV)
     const gameCount = await AppDataSource.manager.count(Game);
     if (gameCount < 100) {
       console.log("Importing games from games_full.csv...");
@@ -56,33 +25,6 @@ export const seedDatabase = async () => {
       console.log("Games imported successfully.");
     } else {
       console.log("Games already exist in database. Skipping import.");
-    }
-
-    // 4. Création Bibliothèque et Review (Exemple avec des jeux importés)
-    if (user) {
-      const games = await AppDataSource.manager.find(Game, { take: 2 });
-      if (games.length >= 2) {
-        const game1 = games[0];
-        const game2 = games[1];
-
-        // Bibliothèque (Liaison User <-> Game)
-        const libraryEntry = new GameUser();
-        libraryEntry.user = user;
-        libraryEntry.game = game1;
-        libraryEntry.nb_hours = 150.5;
-        await AppDataSource.manager.save(libraryEntry);
-        console.log("Library entry created for game:", game1.name);
-
-        // Review
-        const review = new Review();
-        review.user = user;
-        review.game = game2;
-        review.text = "Masterpiece.";
-        review.id_game = game2.id_game;
-        review.id_user = user.id_user;
-        await AppDataSource.manager.save(review);
-        console.log("Review created for game:", game2.name);
-      }
     }
 
     console.log("Seeding complete!");
