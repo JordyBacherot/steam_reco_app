@@ -76,8 +76,12 @@ class _GamePagesState extends State<GamePages> {
       }
 
       // Récupération des jeux similaires (erreur silencieuse : la page reste fonctionnelle)
+      // Timeout de 5s pour ne pas bloquer si l'API Python est lente ou indisponible
       List<NearGameModel> recos = [];
-      try { recos = await _gameService.getNearestGames(intId); } catch (_) {}
+      try {
+        recos = await _gameService.getNearestGames(intId)
+            .timeout(const Duration(seconds: 5), onTimeout: () => []);
+      } catch (_) {}
 
       // Mise à jour de l'état uniquement si le widget est encore monté
       if (mounted) {
@@ -97,10 +101,16 @@ class _GamePagesState extends State<GamePages> {
   @override
   Widget build(BuildContext context) {
     // Affichage d'un indicateur de chargement pendant la récupération des données
+    // L'AppBar avec bouton retour est présent même en chargement pour ne pas bloquer l'utilisateur
     if (_isLoading) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF1b2838),
-        body: Center(child: CircularProgressIndicator(color: Colors.white)),
+      return Scaffold(
+        backgroundColor: const Color(0xFF1b2838),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF171a21),
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: const Text('Chargement...', style: TextStyle(color: Colors.white)),
+        ),
+        body: const Center(child: CircularProgressIndicator(color: Colors.white)),
       );
     }
 
@@ -193,10 +203,12 @@ class _GamePagesState extends State<GamePages> {
                           padding: const EdgeInsets.only(bottom: 12.0),
                           child: InkWell(
                             onTap: () {
-                              // Navigation contextuelle : on pousse la route appropri selon qu'on est dans le branch /profile ou /home
+                              // Navigation contextuelle : on pousse la route selon la branche active
                               final location = GoRouterState.of(context).matchedLocation;
                               if (location.startsWith('/profile')) {
                                 context.push('/profile/game/${nearGame.appid}');
+                              } else if (location.startsWith('/reco')) {
+                                context.push('/reco/game/${nearGame.appid}');
                               } else {
                                 context.push('/game/${nearGame.appid}');
                               }
@@ -230,15 +242,27 @@ class _GamePagesState extends State<GamePages> {
   /// Affiche un conteneur de remplacement si l'URL est vide ou invalide.
   Widget _buildHeroImage(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      return Container(height: 250, color: const Color(0xFF171a21), child: const Center(child: Text("Pas d'image", style: TextStyle(color: Colors.grey))));
+      return Container(
+        height: 250, 
+        color: const Color(0xFF171a21), 
+        child: const Center(child: Text("Pas d'image", style: TextStyle(color: Colors.grey)))
+      );
     }
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
+    
+    // Remplacement de CachedNetworkImage par Image.network
+    return Image.network(
+      imageUrl,
       height: 250,
       width: double.infinity,
       fit: BoxFit.cover,
-      // Widget affiché si l'image ne peut pas être chargée
-      errorWidget: (context, url, error) => Container(height: 250, color: const Color(0xFF171a21), child: const Center(child: Text("Image cassée", style: TextStyle(color: Colors.grey)))),
+      // Le filet de sécurité indispensable pour éviter les crashs !
+      errorBuilder: (context, error, stackTrace) => Container(
+        height: 250, 
+        color: const Color(0xFF171a21), 
+        child: const Center(
+          child: Icon(Icons.broken_image, color: Colors.grey, size: 50)
+        )
+      ),
     );
   }
 }

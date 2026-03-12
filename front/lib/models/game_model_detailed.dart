@@ -34,7 +34,6 @@ class GameModelDetailed {
     }
     return _imageUrl;
   }
-
   /// Constructeur factory permettant de créer un [GameModelDetailed] depuis un JSON.
   /// Utilisé lors du décodage des réponses de l'API.
   factory GameModelDetailed.fromJson(Map<String, dynamic> json) {

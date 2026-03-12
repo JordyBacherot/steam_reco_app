@@ -120,12 +120,20 @@ GoRouter _createRouter(AuthService authService) {
                 path: '/reco',
                 builder: (context, state) => const RecoPage(),
                 routes: [
-                  // Sous-route : affichage des recommandations → /reco/show?type=steam|ai
+                  // Sous-route : affichage des recommandations → /reco/show?type=steam|manual
                   GoRoute(
                     path: 'show',
                     builder: (context, state) {
                       final type = state.uri.queryParameters['type'] ?? 'steam';
                       return RecoShowPage(type: type);
+                    },
+                  ),
+                  // Sous-route : détail d'un jeu depuis les recommandations → /reco/game/:id
+                  GoRoute(
+                    path: 'game/:id',
+                    builder: (context, state) {
+                      final gameId = state.pathParameters['id']!;
+                      return GamePages(gameId: gameId);
                     },
                   ),
                 ],

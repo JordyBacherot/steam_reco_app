@@ -21,6 +21,13 @@ class NavigationWrapper extends StatelessWidget {
       return;
     }
 
+    // Si on tape sur l'onglet déjà actif ET qu'il y a des pages empilées,
+    // on remonte d'un niveau (retour arrière) au lieu de réinitialiser la branche.
+    if (index == navigationShell.currentIndex && context.canPop()) {
+      context.pop();
+      return;
+    }
+
     // Use branch navigation for tabs 0 to 3
     navigationShell.goBranch(
       index,
