@@ -134,8 +134,21 @@ class _GamePagesState extends State<GamePages> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF171a21),
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-        // Titre : nom du jeu, ou son ID si le nom est vide (sécurité)
+        // On force la taille de l'icône à 24 pixels ici
+        iconTheme: const IconThemeData(color: Colors.white, size: 24), 
+        
+        // On redéfinit explicitement le bouton retour
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, size: 24, color: Colors.white),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/'); 
+            }
+          },
+        ),
+        
         title: Text(
           game.name.isNotEmpty ? game.name : "Jeu #${game.idGame}",
           style: const TextStyle(color: Colors.white, fontSize: 18),

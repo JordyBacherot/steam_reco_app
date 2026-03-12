@@ -244,92 +244,149 @@ class _RecoShowPageState extends State<RecoShowPage> {
 
             final String desc = reco['description'] ?? reco['short_description'] ?? 'Pas de description';
             
-            return Card(
-              clipBehavior: Clip.hardEdge, // Empêche l'animation de clic de déborder des coins arrondis
-              color: const Color(0xFF171a21),
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              // On enveloppe le Padding dans un InkWell pour rendre la carte cliquable
-              child: InkWell(
-                onTap: () {
-                  if (appid != null) {
-                    // Navigation vers la page de détail du jeu
-                    context.push('/reco/game/$appid');
-                  } else {
-                    // Sécurité si l'API n'a pas renvoyé d'ID
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Détails indisponibles pour ce jeu.")),
-                    );
-                  }
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: image != null
-                            ? Image.network(
-                                image,
-                                width: 120,
-                                height: 65,
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Container(
-                                  width: 120,
-                                  height: 65,
-                                  color: Colors.grey[800],
-                                  child: const Icon(Icons.image_not_supported, color: Colors.grey),
-                                ),
-                              )
-                            : Container(
-                                width: 120,
-                                height: 65,
-                                color: Colors.grey[800],
-                                child: const Icon(Icons.videogame_asset, color: Colors.grey),
-                              ),
-                      ),
-                      const SizedBox(width: 16),
-                      
-                      // Texts
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              name,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              desc,
-                              style: TextStyle(
-                                color: Colors.grey[400],
-                                fontSize: 12,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ), 
+            return AnimatedGameCard(
+              name: name,
+              desc: desc,
+              image: image,
+              appid: appid,
             );
           },
         ),
       ],
+    );
+  }
+}
+
+class AnimatedGameCard extends StatefulWidget {
+  final String name;
+  final String desc;
+  final String? image;
+  final int? appid;
+
+  const AnimatedGameCard({
+    super.key,
+    required this.name,
+    required this.desc,
+    this.image,
+    this.appid,
+  });
+
+  @override
+  State<AnimatedGameCard> createState() => _AnimatedGameCardState();
+}
+
+class _AnimatedGameCardState extends State<AnimatedGameCard> {
+  bool _isHovered = false; // Mémorise si la souris est sur la carte
+
+  @override
+  Widget build(BuildContext context) {
+    // MouseRegion détecte l'entrée et la sortie de la souris
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          if (widget.appid != null) {
+            context.push('/reco/game/${widget.appid}');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Détails indisponibles pour ce jeu.")),
+            );
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200), // Vitesse de l'animation
+          curve: Curves.easeOut,
+          // Si survolé, on grossit de 2% (1.02)
+          transform: Matrix4.identity()..scale(_isHovered ? 1.02 : 1.0),
+          decoration: BoxDecoration(
+            color: const Color(0xFF171a21),
+            borderRadius: BorderRadius.circular(12),
+            // L'ombre devient plus diffuse et plus forte au survol
+            boxShadow: _isHovered
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.6),
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    )
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Image du jeu
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: widget.image != null
+                        ? Image.network(
+                            widget.image!,
+                            width: 120,
+                            height: 65,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => Container(
+                              width: 120,
+                              height: 65,
+                              color: Colors.grey[800],
+                              child: const Icon(Icons.image_not_supported, color: Colors.grey),
+                            ),
+                          )
+                        : Container(
+                            width: 120,
+                            height: 65,
+                            color: Colors.grey[800],
+                            child: const Icon(Icons.videogame_asset, color: Colors.grey),
+                          ),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Textes
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.name,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          widget.desc,
+                          style: TextStyle(
+                            color: Colors.grey[400],
+                            fontSize: 12,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
