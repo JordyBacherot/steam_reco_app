@@ -5,6 +5,7 @@ import { updateGame } from '../handlers/game/updateGame'
 import { getAllGames } from '../handlers/game/getAllGame'
 import { getGameById } from '../handlers/game/getGameById'
 import { deleteGame } from '../handlers/game/deleteGame'
+import { searchGames } from '../handlers/game/searchGames'
 import { z } from 'zod'
 
 export const gameSchema = z.object({
@@ -19,6 +20,7 @@ const games = new Hono()
 
 // 1. Définition des routes pour la ressource "Game"
 games.get('/', getAllGames)           // Accès public : Liste des jeux
+games.get('/search', searchGames)     // Accès public : Recherche de jeux par nom (?q=terme&limit=10)
 games.get('/:id', getGameById)        // Accès public : Détail d'un jeu
 
 // 2. Routes protégées ( nécessitent validation des données )

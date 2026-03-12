@@ -15,13 +15,20 @@ import 'package:front/features/games/game_pages.dart';
 import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
 
+/// Point d'entrée de l'application Flutter.
+/// Initialise Flutter, charge les variables d'environnement (.env), crée le service d'authentification et démarre l'application.
 Future<void> main() async {
+  // Nécessaire pour utiliser des plugins natifs avant runApp()
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Chargement du fichier .env (ex: API_URL)
   await dotenv.load(fileName: ".env");
 
+  // Initialisation de l'AuthService : restaure la session si un token est stocké localement
   final authService = AuthService();
   await authService.init();
 
+  // Injection de l'AuthService dans l'arbre de widgets via Provider
   runApp(
     ChangeNotifierProvider.value(
       value: authService,
@@ -30,49 +37,68 @@ Future<void> main() async {
   );
 }
 
+/// Crée et configure le routeur GoRouter de l'application.
+/// Le routeur gère :
+///   - La redirection selon l'état d'authentification
+///   - Les routes publiques (sign-in, sign-up)
+///   - Les routes protégées avec barre de navigation (StatefulShellRoute)
 GoRouter _createRouter(AuthService authService) {
   return GoRouter(
+    // GoRouter écoute les changements de l'AuthService pour recalculer les redirections
     refreshListenable: authService,
+    // Page initiale selon que l'utilisateur est déjà connecté ou non
     initialLocation: authService.isAuthenticated ? '/' : '/sign-in',
+
+    /// Logique de redirection globale exécutée à chaque changement de route.
     redirect: (context, state) {
       final isLoggedIn = authService.isAuthenticated;
       final isGoingToAuth = state.matchedLocation == '/sign-in' || state.matchedLocation == '/sign-up';
 
-      // If securely loading on app start, don't redirect yet
+      // Pendant l'initialisation (vérification du token), on ne redirige pas encore
       if (authService.isLoading) return null;
 
+      // Si non connecté et tentative d'accès à une page protégée → redirection vers login
       if (!isLoggedIn && !isGoingToAuth) {
-        return '/sign-in'; // Redirect to login if not logged in
+        return '/sign-in';
       }
 
+      // Si déjà connecté et tentative d'accès à login/inscription → redirection vers l'accueil
       if (isLoggedIn && isGoingToAuth) {
-        return '/'; // Redirect to home if already logged in and trying to access auth pages
+        return '/';
       }
 
-      return null; // No redirect needed
+      // Pas de redirection nécessaire
+      return null;
     },
     routes: [
+      // Route de connexion (accessible sans authentification)
       GoRoute(
         path: '/sign-in',
         builder: (context, state) => const SignInPage(),
       ),
+      // Route d'inscription (accessible sans authentification)
       GoRoute(
         path: '/sign-up',
         builder: (context, state) => const SignUpPage(),
       ),
+
+      // Routes protégées avec barre de navigation inférieure.
+      // StatefulShellRoute.indexedStack maintient l'état de chaque onglet
+      // (la page n'est pas reconstruite quand on change d'onglet).
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          // Return the NavigationWrapper which builds the Scaffold and BottomNavigationBar
+          // NavigationWrapper construit le Scaffold avec la BottomNavigationBar
           return NavigationWrapper(navigationShell: navigationShell);
         },
         branches: [
-          // Tab 0: Accueil
+          // Onglet 0 : Accueil
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/',
                 builder: (context, state) => MainPage(),
                 routes: [
+                  // Sous-route : détail d'un jeu depuis l'accueil → /game/:id
                   GoRoute(
                     path: 'game/:id',
                     builder: (context, state) {
@@ -84,15 +110,17 @@ GoRouter _createRouter(AuthService authService) {
               ),
             ],
           ),
-          // Tab 1: Découvrir
+
+          // Onglet 1 : Découvrir (Recommandations) ---
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/reco',
                 builder: (context, state) => const RecoPage(),
                 routes: [
+                  // Sous-route : affichage des recommandations → /reco/show?type=steam|ai
                   GoRoute(
-                    path: 'show', // Sub-route becomes /reco/show
+                    path: 'show',
                     builder: (context, state) {
                       final type = state.uri.queryParameters['type'] ?? 'steam';
                       return RecoShowPage(type: type);
@@ -102,7 +130,8 @@ GoRouter _createRouter(AuthService authService) {
               ),
             ],
           ),
-          // Tab 2: Chatbot
+
+          // Onglet 2 : Chatbot
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -111,23 +140,34 @@ GoRouter _createRouter(AuthService authService) {
               ),
             ],
           ),
-          // Tab 3: Profil
+
+          // Onglet 3 : Profil
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: '/profile',
                 builder: (context, state) => const ProfilePage(),
                 routes: [
+                  // Sous-route : ajout de jeux à la bibliothèque → /profile/add_games
                   GoRoute(
-                    path: 'add_games', // Sub-route of profile
+                    path: 'add_games',
                     builder: (context, state) => const AddGamesPage(),
+                  ),
+                  // Sous-route : détail d'un jeu depuis le profil → /profile/game/:id
+                  // Nécessaire pour garder le contexte du profil (barre de navigation préservée)
+                  GoRoute(
+                    path: 'game/:id',
+                    builder: (context, state) {
+                      final gameId = state.pathParameters['id']!;
+                      return GamePages(gameId: gameId);
+                    },
                   ),
                 ],
               ),
             ],
           ),
-          // Tab 4 (Déconnexion) is handled natively by the onTap intercept inside NavigationWrapper
-          // so we just define a dummy branch to match the 5 BottomNavigationBar items needed.
+
+          // Onglet 4 : Déconnexion (géré via NavigationWrapper)
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -142,6 +182,8 @@ GoRouter _createRouter(AuthService authService) {
   );
 }
 
+/// Widget racine de l'application.
+/// Affiche un écran de chargement pendant l'initialisation de l'AuthService, puis lance l'application avec le routeur configuré et le thème sombre Steam.
 class MainApp extends StatelessWidget {
   final AuthService authService;
 
@@ -149,7 +191,7 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Show a loading screen while auth completes (very quick usually)
+    // Affichage d'un indicateur de chargement pendant la vérification du token stocké
     if (authService.isLoading) {
       return const MaterialApp(
          home: Scaffold(
@@ -160,7 +202,9 @@ class MainApp extends StatelessWidget {
     }
 
     return MaterialApp.router(
+      // Connexion du routeur GoRouter à MaterialApp
       routerConfig: _createRouter(authService),
+      // Thème sombre avec la couleur de fond Steam
       theme: ThemeData.dark().copyWith(
         scaffoldBackgroundColor: const Color(0xFF1b2838),
       ),

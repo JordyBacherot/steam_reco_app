@@ -1,0 +1,19 @@
+meta {
+  name: SearchGames
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{host}}/games/search?q=dark&limit=10
+  body: none
+  auth: inherit
+}
+
+assert {
+  res.status: eq 200
+  res.body.success: eq true
+  res.body.data: isArray
+  res.body.count: isDefined
+  res.body.query: isDefined
+}

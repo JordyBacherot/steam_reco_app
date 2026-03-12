@@ -2,47 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
+import 'package:front/services/game_service.dart';
+import 'package:front/models/game_model_detailed.dart';
 
-/// The [ProfilePage] displays the current user's profile information, including
-/// their avatar, username, email, and SteamID. It also provides primary actions 
-/// to add new games to their collection or log out of the application.
+/// Page de profil de l'utilisateur connecté.
+/// Affiche :
+///   - L'avatar, le nom d'utilisateur, l'email et le SteamID
+///   - Un bouton pour accéder à l'ajout de jeux
+///   - La bibliothèque de jeux de l'utilisateur (liste scrollable)
+///   - Un bouton de déconnexion
+///
+/// Cette page est un [StatelessWidget] car l'état de l'utilisateur est géré
+/// par [AuthService] via Provider, et la bibliothèque est chargée via [FutureBuilder].
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Écoute les changements d'état de l'AuthService (ex: déconnexion)
     final authService = context.watch<AuthService>();
     final currentUser = authService.currentUser;
 
+    // Extraction des informations de l'utilisateur avec des valeurs par défaut
     final String username = currentUser?['username'] ?? 'Utilisateur';
     final String email = currentUser?['email'] ?? 'Non spécifié';
-    // Use the actual steam_id column if present, else fallback
+    // Identifiant Steam de l'utilisateur (null si non lié à un compte Steam)
     final String steamId = currentUser?['steam_id'] ?? 'Non lié';
-    // Use the actual profile_picture if present, else default to a placeholder
+    // URL de la photo de profil (fallback sur une image placeholder si absente)
     final String avatarUrl = currentUser?['profile_picture'] ?? 'https://picsum.photos/id/237/200/300';
 
     return Padding(
-      // Surround the entire vertical layout with generous padding
       padding: const EdgeInsets.all(24.0),
       child: Column(
-        // Center all children horizontally within the column
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const SizedBox(height: 32),
           
-          // --------------------------------------------------------------------
-          // USER AVATAR
-          // --------------------------------------------------------------------
-          // Circular avatar displaying the user's profile picture fetched from network
+          // Avatar de l'utilisateur
+          // Avatar circulaire chargé depuis l'URL de la photo de profil
           CircleAvatar(
             radius: 60,
             backgroundImage: NetworkImage(avatarUrl),
           ),
           const SizedBox(height: 24),
           
-          // --------------------------------------------------------------------
-          // USER IDENTITY (USERNAME)
-          // --------------------------------------------------------------------
+          // Nom de l'utilisateur
           Text(
             username,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -52,9 +56,7 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           
-          // --------------------------------------------------------------------
-          // USER CONTACT (EMAIL)
-          // --------------------------------------------------------------------
+          // Email de l'utilisateur
           Text(
             email,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -63,9 +65,7 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // --------------------------------------------------------------------
-          // EXTERNAL INTEGRATION (STEAM ID)
-          // --------------------------------------------------------------------
+          // Steam ID : intégration du compte Steam
           Text(
             'SteamID: $steamId',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -73,24 +73,20 @@ class ProfilePage extends StatelessWidget {
             ),
           ),
           
-          // Added generous spacing before the main interaction buttons
           const SizedBox(height: 48),
 
-          // --------------------------------------------------------------------
-          // PRIMARY ACTION: ADD GAMES
-          // --------------------------------------------------------------------
-          // Enforce full width for the button with a specific height
+          // Bouton : ajouter des jeux
+          // Navigation vers la sous-route /profile/add_games via go_router
+          // L'utilisation de context.go() préserve la barre de navigation du bas
           SizedBox(
             width: double.infinity,
             height: 50,
             child: ElevatedButton(
               onPressed: () {
-                // Navigate to the nested "add_games" route using go_router.
-                // This preserves the bottom navigation bar wrapper!
                 context.go('/profile/add_games');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF66c0f4), // Signature Steam blue
+                backgroundColor: const Color(0xFF66c0f4), // Bleu signature Steam
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -103,16 +99,101 @@ class ProfilePage extends StatelessWidget {
             ),
           ),
           
-          // --------------------------------------------------------------------
-          // LAYOUT HELPER
-          // --------------------------------------------------------------------
-          // The Spacer fluidly expands to consume all available vertical space, 
-          // effectively pushing the logout button tightly against the bottom edge.
-          const Spacer(),
+          // Bibliothèque de jeux de l'utilisateur
+          // Cette section est affichée uniquement si l'utilisateur est connecté et que son identifiant est disponible
+          if (currentUser != null && (currentUser['id_user'] != null || currentUser['id'] != null))
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Mes Jeux',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: FutureBuilder<List<GameModelDetailed>>(
+                      // Appel asynchrone au service pour charger la bibliothèque de l'utilisateur
+                      future: GameService().getUserGames(currentUser['id_user'] ?? currentUser['id']),
+                      builder: (context, snapshot) {
+                        // En attente de la réponse API
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        // Erreur lors du chargement
+                        } else if (snapshot.hasError) {
+                          return Center(
+                            child: Text(
+                              'Erreur de chargement',
+                              style: TextStyle(color: Colors.red[300]),
+                            ),
+                          );
+                        // Aucun jeu dans la bibliothèque
+                        } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'Aucun jeu dans la bibliothèque.',
+                              style: TextStyle(color: Colors.grey[500]),
+                            ),
+                          );
+                        }
 
-          // --------------------------------------------------------------------
-          // DANGEROUS/SECONDARY ACTION: LOG OUT
-          // --------------------------------------------------------------------
+                        final games = snapshot.data!;
+                        // Affichage de la liste de jeux sous forme de cartes
+                        return ListView.builder(
+                          itemCount: games.length,
+                          itemBuilder: (context, index) {
+                            final game = games[index];
+                            return Card(
+                              color: const Color(0xFF1E2329),
+                              margin: const EdgeInsets.only(bottom: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                // Icône placeholder (l'image est disponible dans la page de détail)
+                                leading: Container(
+                                  width: 48,
+                                  height: 48,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[800],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Icon(Icons.sports_esports, color: Colors.white),
+                                ),
+                                title: Text(
+                                  game.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                                // Tap : navigation vers la page de détail du jeu (sous /profile/game/:id)
+                                onTap: () {
+                                  context.push('/profile/game/${game.idGame}');
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Si l'utilisateur n'est pas connecté, on pousse le bouton de déconnexion vers le bas
+          if (currentUser == null || (currentUser['id_user'] == null && currentUser['id'] == null))
+            const Spacer(),
+
+          // Bouton pour se déconnecter
+          // Appel logout() de l'AuthService qui notifie les listeners.
+          // GoRouter écoute ces changements via refreshListenable et redirige automatiquement vers /sign-in sans avoir à appeler context.go().
           SizedBox(
             width: double.infinity,
             height: 50,
@@ -120,10 +201,6 @@ class ProfilePage extends StatelessWidget {
               onPressed: () async {
                 final authService = context.read<AuthService>();
                 await authService.logout();
-                // We do not need to call context.go('/sign-in') here because 
-                // in main.dart, GoRouter has `refreshListenable: authService`,
-                // meaning it will automatically run its `redirect` logic and 
-                // kick the user to '/sign-in' as soon as logout() calls notifyListeners().
               },
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.redAccent,
@@ -139,7 +216,7 @@ class ProfilePage extends StatelessWidget {
             ),
           ),
           
-          // Safety margin beneath the bottom button
+          // Marge de sécurité en bas
           const SizedBox(height: 16),
         ],
       ),
