@@ -15,5 +15,6 @@ RUN bun install
 
 # Copie du reste du code source
 COPY ./src ./src
+COPY ./data ./data
 
 CMD ["bun", "run", "start"]
