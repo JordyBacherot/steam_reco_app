@@ -4,6 +4,7 @@ import 'package:front/services/auth_service.dart';
 import 'package:front/core/network/api_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:front/features/recommendations/trend_map_modal.dart';
 
 class RecoPage extends StatefulWidget {
   const RecoPage({super.key});
@@ -56,7 +57,9 @@ class _RecoPageState extends State<RecoPage> {
                           width: 40,
                           height: 40,
                           colorFilter: ColorFilter.mode(
-                            isEnabled ? const Color(0xFF66c0f4) : Colors.grey[500]!,
+                            isEnabled
+                                ? const Color(0xFF66c0f4)
+                                : Colors.grey[500]!,
                             BlendMode.srcIn,
                           ),
                         )
@@ -65,13 +68,17 @@ class _RecoPageState extends State<RecoPage> {
                           imageAsset,
                           width: 40,
                           height: 40,
-                          color: isEnabled ? const Color(0xFF66c0f4) : Colors.grey[500],
+                          color: isEnabled
+                              ? const Color(0xFF66c0f4)
+                              : Colors.grey[500],
                         )
                     else if (icon != null)
                       Icon(
                         icon,
                         size: 40,
-                        color: isEnabled ? const Color(0xFF66c0f4) : Colors.grey[500],
+                        color: isEnabled
+                            ? const Color(0xFF66c0f4)
+                            : Colors.grey[500],
                       ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -97,7 +104,8 @@ class _RecoPageState extends State<RecoPage> {
                 if (!isEnabled) ...[
                   const SizedBox(height: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: Colors.black45,
                       borderRadius: BorderRadius.circular(8),
@@ -105,7 +113,8 @@ class _RecoPageState extends State<RecoPage> {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: Colors.amber, size: 20),
+                        const Icon(Icons.warning_amber_rounded,
+                            color: Colors.amber, size: 20),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -135,7 +144,8 @@ class _RecoPageState extends State<RecoPage> {
                           ),
                         ),
                         SizedBox(width: 4),
-                        Icon(Icons.arrow_forward, color: Color(0xFF66c0f4), size: 18),
+                        Icon(Icons.arrow_forward,
+                            color: Color(0xFF66c0f4), size: 18),
                       ],
                     ),
                   ),
@@ -170,48 +180,69 @@ class _RecoPageState extends State<RecoPage> {
         padding: const EdgeInsets.all(24.0),
         children: [
           Text(
-                    'Trouver de nouveaux jeux',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Choisissez sur quelle base notre système doit vous recommander de nouveaux jeux.',
-                    style: TextStyle(color: Colors.grey[400], fontSize: 16),
-                  ),
-                  const SizedBox(height: 32),
+            'Trouver de nouveaux jeux',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Choisissez sur quelle base notre système doit vous recommander de nouveaux jeux.',
+            style: TextStyle(color: Colors.grey[400], fontSize: 16),
+          ),
+          const SizedBox(height: 32),
 
-                  // Option 1: Steam Profile
-                  _buildRecoCard(
-                    context: context,
-                    title: 'Basé sur votre compte Steam',
-                    description: 'Utilise la totalité des jeux présents sur votre compte Steam lié pour générer des recommandations ultra-précises.',
-                    imageAsset: 'assets/svg/steam_icon.svg',
-                    isEnabled: hasSteamId,
-                    disabledReason: 'Nécessite de lier votre compte Steam dans votre profil.',
-                    onPressed: () {
-                      context.go('/reco/show?type=steam');
-                    },
-                  ),
-                  const SizedBox(height: 24),
+          // Option 1: Steam Profile
+          _buildRecoCard(
+            context: context,
+            title: 'Basé sur votre compte Steam',
+            description:
+                'Utilise la totalité des jeux présents sur votre compte Steam lié pour générer des recommandations ultra-précises.',
+            imageAsset: 'assets/svg/steam_icon.svg',
+            isEnabled: hasSteamId,
+            disabledReason:
+                'Nécessite de lier votre compte Steam dans votre profil.',
+            onPressed: () {
+              context.go('/reco/show?type=steam');
+            },
+          ),
+          const SizedBox(height: 24),
 
-                  // Option 2: Custom Local Profile
-                  _buildRecoCard(
-                    context: context,
-                    title: 'Basé sur votre liste personnalisée',
-                    description: 'Utilise les jeux que vous avez manuellement ajoutés dans votre bibliothèque sur l\'application.',
-                    icon: Icons.list_alt_rounded,
-                    isEnabled: hasEnoughGames,
-                    disabledReason: 'Nécessite d\'ajouter au moins 3 jeux manuellement.\nActuel: $addedGamesCount/3',
-                    onPressed: () {
-                      context.go('/reco/show?type=manual');
-                    },
-                  ),
-                ],
-              ),
+          // Option 2: Custom Local Profile
+          _buildRecoCard(
+            context: context,
+            title: 'Basé sur votre liste personnalisée',
+            description:
+                'Utilise les jeux que vous avez manuellement ajoutés dans votre bibliothèque sur l\'application.',
+            icon: Icons.list_alt_rounded,
+            isEnabled: hasEnoughGames,
+            disabledReason:
+                'Nécessite d\'ajouter au moins 3 jeux manuellement.\nActuel: $addedGamesCount/3',
+            onPressed: () {
+              context.go('/reco/show?type=manual');
+            },
+          ),
+          const SizedBox(height: 24),
+
+          // Option 3: trend dans le monde
+          _buildRecoCard(
+            context: context,
+            title: 'Trend dans le monde',
+            description:
+                'Découvrez les jeux les plus populaires et tendances du moment à travers le monde.',
+            icon: Icons.public,
+            isEnabled: true,
+            disabledReason: '',
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (context) => const TrendMapModal(),
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 }
-
