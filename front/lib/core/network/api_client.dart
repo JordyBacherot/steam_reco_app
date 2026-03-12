@@ -8,7 +8,7 @@ class ApiClient {
   final SecureStorage _secureStorage = SecureStorage();
 
   ApiClient() {
-    final baseUrl = dotenv.env['API_URL'] ?? 'http://127.0.0.1:3000/'; // Fallback if env is missing
+    final baseUrl = (dotenv.env['API_URL'] ?? 'http://127.0.0.1:3000').replaceAll(RegExp(r'/$'), '');
 
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,

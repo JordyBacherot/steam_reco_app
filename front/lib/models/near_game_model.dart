@@ -19,9 +19,9 @@ class NearGameModel {
   /// Constructeur factory permettant de créer un [NearGameModel] depuis un JSON.
   factory NearGameModel.fromJson(Map<String, dynamic> json) {
     return NearGameModel(
-      appid: json['appid'] as int,
+      appid: int.parse(json['appid'].toString()),
       name: json['name'] as String,
-      score: (json['score'] as num).toDouble(),
+      score: double.tryParse(json['score']?.toString() ?? '0') ?? 0.0,
     );
   }
 

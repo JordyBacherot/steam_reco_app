@@ -151,9 +151,9 @@ class _GamePagesState extends State<GamePages> {
                   const SizedBox(height: 8),
 
                   // Studio développeur (affiché uniquement s'il est renseigné)
-                  if (game.studio != null && game.studio!.isNotEmpty)
+                  if (game.studio != null && (game.studio?.isNotEmpty ?? false))
                     Text(
-                      game.studio!,
+                      game.studio ?? '',
                       style: const TextStyle(fontSize: 14, color: Colors.white54, fontStyle: FontStyle.italic),
                     ),
 

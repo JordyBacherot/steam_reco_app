@@ -65,36 +65,154 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Steam ID : intégration du compte Steam
-          Text(
-            'SteamID: $steamId',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Colors.grey[500],
-            ),
-          ),
-          
-          const SizedBox(height: 48),
-
-          // Bouton : ajouter des jeux
-          // Navigation vers la sous-route /profile/add_games via go_router
-          // L'utilisation de context.go() préserve la barre de navigation du bas
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: () {
-                context.go('/profile/add_games');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF66c0f4), // Bleu signature Steam
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+          // --------------------------------------------------------------------
+          // EXTERNAL INTEGRATION (STEAM ID)
+          // --------------------------------------------------------------------
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'SteamID: $steamId',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[500],
                 ),
               ),
-              child: const Text(
-                'Ajouter des jeux',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              const SizedBox(width: 16),
+              OutlinedButton.icon(
+                onPressed: () {
+                  final TextEditingController steamIdController = TextEditingController(
+                    text: steamId == 'Non lié' ? '' : steamId,
+                  );
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext dialogContext) {
+                      return AlertDialog(
+                        backgroundColor: const Color(0xFF1E1E1E),
+                        title: const Text('Modifier Steam ID', style: TextStyle(color: Colors.white)),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: steamIdController,
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: const InputDecoration(
+                                hintText: "Ex: 76561197960287930",
+                                hintStyle: TextStyle(color: Colors.white54),
+                                enabledBorder: UnderlineInputBorder(
+                                  borderSide: BorderSide(color: Colors.white24),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Theme(
+                              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                tilePadding: EdgeInsets.zero,
+                                iconColor: Colors.blueAccent,
+                                collapsedIconColor: Colors.blueAccent,
+                                title: const Text(
+                                  "Où trouver mon Steam ID ?",
+                                  style: TextStyle(
+                                    color: Colors.blueAccent,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.05),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.white12),
+                                    ),
+                                    child: const Text(
+                                      "1. Ouvrez Steam et cliquez sur votre pseudo en haut à droite.\n"
+                                      "2. Sélectionnez 'Détails du compte'.\n"
+                                      "3. Votre 'ID Steam' (une suite de 17 chiffres) se trouve en haut de la page, sous le nom de votre compte.",
+                                      style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 13,
+                                        height: 1.4,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: const Text('Annuler', style: TextStyle(color: Colors.grey)),
+                            onPressed: () {
+                              Navigator.of(dialogContext).pop();
+                            },
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF66c0f4)),
+                            onPressed: () async {
+                              final newSteamId = steamIdController.text.trim();
+                              if (newSteamId.isNotEmpty) {
+                                final success = await context.read<AuthService>().updateSteamId(newSteamId);
+                                if (success && context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Steam ID mis à jour')),
+                                  );
+                                  Navigator.of(dialogContext).pop();
+                                } else if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Erreur lors de la mise à jour')),
+                                  );
+                                }
+                              }
+                            },
+                            child: const Text('Sauvegarder', style: TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                icon: const Icon(Icons.edit, size: 16),
+                label: Text(steamId == 'Non lié' || steamId.isEmpty ? 'Ajouter' : 'Modifier'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.grey[600]!),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 24),
+
+          // Bouton : ajouter des jeux
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  context.go('/profile/add_games');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF66c0f4), // Bleu signature Steam
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Ajouter des jeux',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ),
@@ -155,14 +273,20 @@ class ProfilePage extends StatelessWidget {
                               ),
                               child: ListTile(
                                 // Icône placeholder (l'image est disponible dans la page de détail)
-                                leading: Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[800],
-                                    borderRadius: BorderRadius.circular(8),
+                                leading: ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.network(
+                                    game.imageUrl,
+                                    width: 100, // Capsule aspect ratio is roughly 2.3:1 (231x87)
+                                    height: 44,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) => Container(
+                                      width: 100,
+                                      height: 44,
+                                      color: Colors.grey[800],
+                                      child: const Icon(Icons.videogame_asset, color: Colors.white54),
+                                    ),
                                   ),
-                                  child: const Icon(Icons.sports_esports, color: Colors.white),
                                 ),
                                 title: Text(
                                   game.name,

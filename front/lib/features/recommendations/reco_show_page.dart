@@ -232,7 +232,15 @@ class _RecoShowPageState extends State<RecoShowPage> {
             // Depending on the python API returning structure, 
             // map it to a standard object. Assuming it returns at least 'name' and 'game_id'.
             final String name = reco['name'] ?? reco['title'] ?? 'Jeu inconnu';
-            final String? image = reco['image_url'] ?? reco['header_image'];
+            final int? appid = reco['appid'] is int
+                ? reco['appid']
+                : int.tryParse(reco['appid']?.toString() ?? '');
+            final String? rawImage = reco['image_url'] ?? reco['header_image'];
+            // Build Steam CDN capsule image if missing or placeholder (matching GameModel logic)
+            final String? image = (rawImage == null || rawImage.isEmpty || rawImage.contains('picsum.photos'))
+                ? (appid != null ? 'https://cdn.akamai.steamstatic.com/steam/apps/$appid/capsule_231x87.jpg' : null)
+                : rawImage;
+
             final String desc = reco['description'] ?? reco['short_description'] ?? 'Pas de description';
             
             return Card(

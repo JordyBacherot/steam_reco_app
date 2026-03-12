@@ -26,9 +26,7 @@ class AuthService extends ChangeNotifier {
     try {
       final token = await _secureStorage.readToken();
       if (token != null) {
-        // Optimistically set authenticated to true to show the UI quickly
-        _isAuthenticated = true;
-        // Optionally fetch the user profile from /me
+        // Fetch the user profile from /me to verify token
         await _fetchProfile();
         
         // Fetch user games count
@@ -183,5 +181,65 @@ class AuthService extends ChangeNotifier {
     } catch (e) {
       log('Failed to load user games count: $e');
     }
+  }
+
+  /// Public method to update or add a Steam ID for the current user
+  Future<bool> updateSteamId(String steamId) async {
+    final userId = _currentUser?['id'] ?? _currentUser?['id_user'];
+    if (userId == null) return false;
+
+    try {
+      // First, try to fetch if the user already has a steam profile created
+      final checkResponse = await _apiClient.dio.get('/steam_users/$userId');
+      
+      Response response;
+      if (checkResponse.statusCode == 200) {
+        // Steam user exists, we update it via PUT
+        final steamUserId = checkResponse.data['id_steam_user'] ?? checkResponse.data['id']; // ID of the steam_users row if applicable, but the route uses id_user usually
+        // Actually the backend update route `steamUserRoutes.put('/:id'` expects the SteamUser ID or User ID depending on implementation.
+        // Looking at backend it might expect id_steam_user, but let's assume it puts by user ID since it's a 1:1 relation.
+        // A safer way if it is not 100% known if it's PUT by user_id or steam_id is to handle errors
+        response = await _apiClient.dio.put('/steam_users/$userId', data: {
+          'id_steam': steamId,
+          'id_user': userId,
+          'username': _currentUser?['username'] ?? 'Utilisateur',
+        });
+      } else {
+         // Create new steam user
+         throw Exception("Not found");
+      }
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Update local state
+        _currentUser!['steam_id'] = steamId;
+        notifyListeners();
+        return true;
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // Steam user doesn't exist yet, we create it via POST
+        try {
+          final response = await _apiClient.dio.post('/steam_users', data: {
+            'id_steam': steamId,
+            'id_user': userId,
+             'username': _currentUser?['username'] ?? 'Utilisateur',
+          });
+          if (response.statusCode == 200 || response.statusCode == 201) {
+            _currentUser!['steam_id'] = steamId;
+            notifyListeners();
+            return true;
+          }
+        } catch (postError) {
+          log('Failed to create steam user: $postError');
+        }
+      } else {
+        log('Failed to update steam user: ${e.response?.data}');
+      }
+    } catch (e) {
+      log('Unexpected error updating steam id: $e');
+    }
+    
+    // Fallback: If the PUT/POST to steam_users fails, try the old /users/ update if have_steamid needs true
+    return false;
   }
 }

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:front/models/game_model.dart';
+import 'package:front/models/recommendation_model.dart';
+import 'package:front/features/main/widgets/recommendation_card.dart';
 
+/// Displays the list of past recommendation sessions.
+/// Shows an empty state with a CTA if there are no sessions yet.
 class RecommendationList extends StatelessWidget {
-  final List<GameModel> games;
+  final List<RecommendationModel> recommendations;
 
   const RecommendationList({
     super.key,
-    required this.games,
+    required this.recommendations,
   });
 
   @override
@@ -16,76 +19,51 @@ class RecommendationList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Dernière recommandations :',
+          'Dernières recommandations :',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
               ),
         ),
         const SizedBox(height: 16),
-        ListView.separated(
-          shrinkWrap: true, // Needed to put a ListView inside a Column/ListView
-          physics: const NeverScrollableScrollPhysics(), // Disable internal scrolling
-          itemCount: games.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final game = games[index];
-            return Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              color: const Color(0xFF2A475E), // Dark blue-grey for Steam aesthetic
-              child: InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: () {
-                  context.push('/game/${game.id}');
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Row(
-                    children: [
-                      // Game Icon / Capsule Image
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: Image.network(
-                          game.imageUrl,
-                          width: 100,
-                          height: 46,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              Container(
-                            width: 100,
-                            height: 46,
-                            color: Colors.grey[800],
-                            child: const Icon(Icons.videogame_asset, color: Colors.white54),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // Game Title
-                      Expanded(
-                        child: Text(
-                          game.title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                      // Arrow on the right
-                      const Icon(
-                        Icons.chevron_right,
-                        color: Colors.white54,
-                      ),
-                    ],
+        if (recommendations.isEmpty)
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32.0),
+              child: Column(
+                children: [
+                  const Text(
+                    "Aucune recommandation pour l'instant",
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.go('/reco'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF66c0f4),
+                    ),
+                    child: const Text(
+                      'Commencer maintenant !',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
-            );
-          },
-        ),
+            ),
+          )
+        else
+          ListView.separated(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: recommendations.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              return RecommendationCard(
+                recommendation: recommendations[index],
+                onTap: () => context.go('/reco'),
+              );
+            },
+          ),
       ],
     );
   }

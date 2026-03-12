@@ -49,20 +49,22 @@ GoRouter _createRouter(AuthService authService) {
     // Page initiale selon que l'utilisateur est déjà connecté ou non
     initialLocation: authService.isAuthenticated ? '/' : '/sign-in',
 
-    /// Logique de redirection globale exécutée à chaque changement de route.
     redirect: (context, state) {
+      // Access auth state
       final isLoggedIn = authService.isAuthenticated;
-      final isGoingToAuth = state.matchedLocation == '/sign-in' || state.matchedLocation == '/sign-up';
+      
+      // Determine if we are on an auth-related page
+      final isGoingToAuth = state.uri.path == '/sign-in' || state.uri.path == '/sign-up';
 
-      // Pendant l'initialisation (vérification du token), on ne redirige pas encore
+      // While checking the token, don't redirect
       if (authService.isLoading) return null;
 
-      // Si non connecté et tentative d'accès à une page protégée → redirection vers login
+      // If NOT logged in and trying to access a protected page -> FORCE login
       if (!isLoggedIn && !isGoingToAuth) {
         return '/sign-in';
       }
 
-      // Si déjà connecté et tentative d'accès à login/inscription → redirection vers l'accueil
+      // If ALREADY logged in and trying to access login/register -> Home
       if (isLoggedIn && isGoingToAuth) {
         return '/';
       }

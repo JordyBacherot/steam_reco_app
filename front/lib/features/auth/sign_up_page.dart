@@ -16,7 +16,6 @@ class _SignUpPageState extends State<SignUpPage> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _steamIdController = TextEditingController();
   
   bool _isLoading = false;
 
@@ -26,7 +25,6 @@ class _SignUpPageState extends State<SignUpPage> {
     _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _steamIdController.dispose();
     super.dispose();
   }
 
@@ -142,12 +140,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 labelText: 'Password',
                 obscureText: true,
               ),
-              const SizedBox(height: 16),
-
-              _buildTextField(
-                controller: _steamIdController,
-                labelText: 'ID Steam (Optionnel)',
-              ),
               const SizedBox(height: 32),
 
               // 4. Registration Button
@@ -165,8 +157,6 @@ class _SignUpPageState extends State<SignUpPage> {
                   }
 
                   setState(() => _isLoading = true);
-                  
-                  final steamId = _steamIdController.text.trim();
                   
                   final authService = context.read<AuthService>();
                   final success = await authService.signUp(username, email, password);

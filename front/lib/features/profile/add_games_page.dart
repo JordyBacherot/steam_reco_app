@@ -19,30 +19,6 @@ class _AddGamesPageState extends State<AddGamesPage> {
   final ApiClient _apiClient = ApiClient();
   bool _isLoading = true;
 
-  // Fake game database for the dropdown
-  final List<GameModel> _availableGames = [
-    const GameModel(
-      id: '292030',
-      title: 'The Witcher 3: Wild Hunt',
-      imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/292030/capsule_231x87.jpg',
-    ),
-    const GameModel(
-      id: '620',
-      title: 'Portal 2',
-      imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/620/capsule_231x87.jpg',
-    ),
-    const GameModel(
-      id: '105600',
-      title: 'Terraria',
-      imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/105600/capsule_231x87.jpg',
-    ),
-    const GameModel(
-      id: '550',
-      title: 'Left 4 Dead 2',
-      imageUrl: 'https://cdn.akamai.steamstatic.com/steam/apps/550/capsule_231x87.jpg',
-    ),
-  ];
-
   // List of games already added by the user (fetched from backend)
   List<Map<String, dynamic>> _addedGames = [];
 
@@ -53,8 +29,12 @@ class _AddGamesPageState extends State<AddGamesPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchUserGames();
+      _fetchInitialData();
     });
+  }
+
+  Future<void> _fetchInitialData() async {
+    await _fetchUserGames();
   }
 
   Future<void> _fetchUserGames() async {
@@ -101,11 +81,13 @@ class _AddGamesPageState extends State<AddGamesPage> {
     if (_selectedGame != null && _hoursController.text.isNotEmpty) {
       final hours = int.tryParse(_hoursController.text);
       if (hours != null && hours >= 0) {
+        // Capture context-dependent objects BEFORE any await
         final authService = context.read<AuthService>();
+        final messenger = ScaffoldMessenger.of(context);
         final userId = authService.currentUser?['id'] ?? authService.currentUser?['id_user'];
 
         if (userId == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             const SnackBar(content: Text('Erreur: Utilisateur non connecté')),
           );
           return;
@@ -123,18 +105,15 @@ class _AddGamesPageState extends State<AddGamesPage> {
           );
 
           if (response.statusCode == 200 || response.statusCode == 201) {
-            // Re-fetch library
             await _fetchUserGames();
-            
-            // Re-fetch global count for recommendations page unlock
             authService.fetchUserGamesCount();
-            
+
             if (mounted) {
               setState(() {
                 _selectedGame = null;
                 _hoursController.clear();
               });
-              ScaffoldMessenger.of(context).showSnackBar(
+              messenger.showSnackBar(
                 const SnackBar(content: Text("Jeu ajouté avec succès !")),
               );
             }
@@ -142,7 +121,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
         } catch (e) {
           debugPrint('Failed to add game: $e');
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
+            messenger.showSnackBar(
               const SnackBar(content: Text("Erreur lors de l'ajout du jeu")),
             );
           }
@@ -156,7 +135,9 @@ class _AddGamesPageState extends State<AddGamesPage> {
   }
 
   Future<void> _deleteGame(String gameId) async {
+    // Capture context-dependent objects BEFORE any await
     final authService = context.read<AuthService>();
+    final messenger = ScaffoldMessenger.of(context);
     final userId = authService.currentUser?['id'] ?? authService.currentUser?['id_user'];
 
     if (userId == null) return;
@@ -164,15 +145,13 @@ class _AddGamesPageState extends State<AddGamesPage> {
     try {
       final response = await _apiClient.dio.delete('/users/$userId/games/$gameId');
       if (response.statusCode == 200) {
-        
-        // Refresh global count
         authService.fetchUserGamesCount();
 
         if (mounted) {
           setState(() {
             _addedGames.removeWhere((item) => (item['game'] as GameModel).id == gameId);
           });
-          ScaffoldMessenger.of(context).showSnackBar(
+          messenger.showSnackBar(
             const SnackBar(content: Text('Jeu retiré de la bibliothèque')),
           );
         }
@@ -219,7 +198,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
 
             // Dropdown and Rating Row
             GameSearchRow(
-              availableGames: _availableGames,
+              availableGames: const [], // Not used anymore by GameSearchRow
               selectedGame: _selectedGame,
               onGameSelected: (newValue) {
                 setState(() {

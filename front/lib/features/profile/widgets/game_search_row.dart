@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:front/models/game_model.dart';
+import 'package:front/services/game_service.dart';
 
-class GameSearchRow extends StatelessWidget {
+class GameSearchRow extends StatefulWidget {
   final List<GameModel> availableGames;
   final GameModel? selectedGame;
   final ValueChanged<GameModel?> onGameSelected;
@@ -16,70 +17,181 @@ class GameSearchRow extends StatelessWidget {
   });
 
   @override
+  State<GameSearchRow> createState() => _GameSearchRowState();
+}
+
+class _GameSearchRowState extends State<GameSearchRow> {
+  late FixedExtentScrollController _scrollController;
+  static const int _maxHours = 9999;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = int.tryParse(widget.hoursController.text) ?? 0;
+    _scrollController = FixedExtentScrollController(initialItem: initial);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // Dropdown
+        // Search field with label
         Expanded(
-          flex: 2,
-          child: DropdownButtonFormField<GameModel>(
-            isExpanded: true,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: const Color(0xFF2A475E),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide.none,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Nom du jeu',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
-              hintText: 'Rechercher un jeu...',
-              hintStyle: const TextStyle(color: Colors.grey),
-            ),
-            dropdownColor: const Color(0xFF2A475E),
-            value: selectedGame,
-            items: availableGames.map((game) {
-              return DropdownMenuItem<GameModel>(
-                value: game,
-                child: Text(
-                  game.title,
-                  style: const TextStyle(color: Colors.white),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              );
-            }).toList(),
-            onChanged: onGameSelected,
+              const SizedBox(height: 4),
+              Autocomplete<GameModel>(
+                optionsBuilder: (TextEditingValue textEditingValue) async {
+                  if (textEditingValue.text.isEmpty) {
+                    return const Iterable<GameModel>.empty();
+                  }
+                  try {
+                    final games = await GameService().searchGames(
+                      textEditingValue.text,
+                      limit: 15,
+                    );
+                    
+                    return games.map<GameModel>((g) => GameModel(
+                      id: g.idGame.toString(),
+                      title: g.name,
+                      imageUrl: g.imageUrl,
+                    )).toList();
+                  } catch (e) {
+                    debugPrint('Error fetching game suggestions: $e');
+                  }
+                  return const Iterable<GameModel>.empty();
+                },
+                displayStringForOption: (GameModel option) => option.title,
+                onSelected: widget.onGameSelected,
+                fieldViewBuilder: (context, controller, focusNode, onEditingComplete) {
+                  return TextField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    onEditingComplete: onEditingComplete,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: const Color(0xFF2A475E),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      hintText: 'Rechercher un jeu...',
+                      hintStyle: const TextStyle(color: Colors.grey),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+                      suffixIcon: widget.selectedGame != null
+                          ? IconButton(
+                              icon: const Icon(Icons.clear, color: Colors.grey),
+                              onPressed: () {
+                                controller.clear();
+                                widget.onGameSelected(null);
+                              },
+                            )
+                          : null,
+                    ),
+                  );
+                },
+                optionsViewBuilder: (context, onSelected, options) {
+                  return Align(
+                    alignment: Alignment.topLeft,
+                    child: Material(
+                      color: const Color(0xFF2A475E),
+                      elevation: 4.0,
+                      borderRadius: BorderRadius.circular(8),
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: 250,
+                          maxWidth: MediaQuery.of(context).size.width * 0.5,
+                        ),
+                        child: ListView.builder(
+                          padding: EdgeInsets.zero,
+                          shrinkWrap: true,
+                          itemCount: options.length,
+                          itemBuilder: (context, index) {
+                            final option = options.elementAt(index);
+                            return ListTile(
+                              title: Text(option.title, style: const TextStyle(color: Colors.white)),
+                              onTap: () => onSelected(option),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 16),
-        
-        // Hours Input
-        Expanded(
-          flex: 1,
-          child: Row(
+
+        // Hours drum/wheel picker — same label format, narrower width
+        SizedBox(
+          width: 110,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'Heures: ',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                'Heures jouées',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
               ),
-              Expanded(
-                child: TextField(
-                  controller: hoursController,
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(color: Colors.white),
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: const Color(0xFF2A475E),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                  ),
+              const SizedBox(height: 4),
+              Container(
+                height: 44,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2A475E),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ),
-              const Text(
-                ' h',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    ListWheelScrollView.useDelegate(
+                      controller: _scrollController,
+                      itemExtent: 20,
+                      diameterRatio: 1,
+                      perspective: 0.003,
+                      physics: const FixedExtentScrollPhysics(),
+                      onSelectedItemChanged: (index) {
+                        widget.hoursController.text = index.toString();
+                      },
+                      childDelegate: ListWheelChildBuilderDelegate(
+                        builder: (context, index) => Center(
+                          child: Text(
+                            '$index h',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        childCount: _maxHours + 1,
+                      ),
+                    ),
+                    // Visual hint for scrolling
+                    const Positioned(
+                      right: 8,
+                      child: Icon(
+                        Icons.unfold_more,
+                        color: Colors.white24,
+                        size: 18,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

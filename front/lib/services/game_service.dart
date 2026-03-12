@@ -10,10 +10,37 @@ import 'package:front/models/near_game_model.dart';
 /// les jeux similaires et la bibliothèque d'un utilisateur.
 class GameService {
   /// URL de base de l'API, chargée depuis le fichier .env
-  final String _baseUrl = dotenv.env['API_URL'] ?? "http://localhost:3000";
+  /// URL de base de l'API, chargée depuis le fichier .env (normalisée sans slash final)
+  final String _baseUrl = (dotenv.env['API_URL'] ?? "http://localhost:3000").replaceAll(RegExp(r'/$'), '');
 
   /// Service de stockage sécurisé pour accéder au token JWT de l'utilisateur connecté
   final SecureStorage _secureStorage = SecureStorage();
+
+  /// Recherche des jeux par nom via le nouvel endpoint /games/search.
+  /// Le paramètre [limit] permet de limiter le nombre de résultats (défaut: 15).
+  Future<List<GameModelDetailed>> searchGames(String query, {int limit = 15}) async {
+    try {
+      final response = await http.get(
+        Uri.parse("$_baseUrl/games/search?q=$query&limit=$limit"),
+        headers: {"Accept": "application/json"},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          final List<dynamic> jsonList = data['data'];
+          return jsonList.map((j) => GameModelDetailed.fromJson(j)).toList();
+        }
+        return [];
+      } else {
+        print("[GameService] Error searching games: ${response.statusCode}");
+        return [];
+      }
+    } catch (e) {
+      print("[GameService] Exception searching games: $e");
+      return [];
+    }
+  }
 
   /// Récupère les détails complets d'un jeu à partir de son identifiant.
   /// Retourne null en cas d'erreur ou si le jeu n'existe pas.

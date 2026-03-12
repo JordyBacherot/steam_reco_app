@@ -13,8 +13,8 @@ class GameModelDetailed {
   /// Note moyenne des reviews (entre 0.0 et 1.0, null si aucune review)
   final double? meanReview;
 
-  /// URL de l'image de couverture du jeu (peut être null)
-  final String? imageUrl;
+  /// URL de l'image de couverture du jeu.
+  final String _imageUrl;
 
   /// Nom du studio développeur (peut être null)
   final String? studio;
@@ -23,21 +23,30 @@ class GameModelDetailed {
     required this.idGame,
     required this.name,
     this.description,
-    this.imageUrl,
+    String? imageUrl,
     this.studio,
     this.meanReview,
-  });
+  }) : _imageUrl = imageUrl ?? '';
+
+  String get imageUrl {
+    if (_imageUrl.isEmpty || _imageUrl.contains('picsum.photos')) {
+      return 'https://cdn.akamai.steamstatic.com/steam/apps/$idGame/capsule_231x87.jpg';
+    }
+    return _imageUrl;
+  }
 
   /// Constructeur factory permettant de créer un [GameModelDetailed] depuis un JSON.
   /// Utilisé lors du décodage des réponses de l'API.
   factory GameModelDetailed.fromJson(Map<String, dynamic> json) {
     return GameModelDetailed(
-      idGame: json['id_game'] as int,
+      idGame: int.parse(json['id_game'].toString()),
       name: json['name'] as String,
       description: json['description'] as String?,
       imageUrl: json['image_url'] as String?,
       studio: json['studio'] as String?,
-      meanReview: (json['mean_review'] as num?)?.toDouble(),
+      meanReview: json['mean_review'] != null 
+          ? double.tryParse(json['mean_review'].toString())
+          : null,
     );
   }
 
