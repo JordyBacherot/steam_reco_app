@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:front/models/game_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:front/core/network/api_client.dart';
 import 'package:front/services/auth_service.dart';
 import 'package:front/features/profile/widgets/game_search_row.dart';
 import 'package:front/features/profile/widgets/game_preview_card.dart';
 import 'package:front/features/profile/widgets/added_game_card.dart';
+import 'package:front/services/game_service.dart';
+import 'package:front/core/theme/app_theme.dart';
+import 'package:front/shared/widgets/section_title.dart';
+import 'package:front/shared/widgets/empty_state.dart';
+import 'package:front/shared/widgets/status_views.dart';
 
 class AddGamesPage extends StatefulWidget {
   const AddGamesPage({super.key});
@@ -16,7 +20,6 @@ class AddGamesPage extends StatefulWidget {
 }
 
 class _AddGamesPageState extends State<AddGamesPage> {
-  final ApiClient _apiClient = ApiClient();
   bool _isLoading = true;
 
   // List of games already added by the user (fetched from backend)
@@ -28,9 +31,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchInitialData();
-    });
+    _fetchInitialData();
   }
 
   Future<void> _fetchInitialData() async {
@@ -38,8 +39,8 @@ class _AddGamesPageState extends State<AddGamesPage> {
   }
 
   Future<void> _fetchUserGames() async {
-    final authService = context.read<AuthService>();
-    final userId = authService.currentUser?['id'] ?? authService.currentUser?['id_user'];
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final userId = authService.currentUser?.id;
     
     if (userId == null) {
       if (mounted) setState(() => _isLoading = false);
@@ -47,29 +48,25 @@ class _AddGamesPageState extends State<AddGamesPage> {
     }
 
     try {
-      final response = await _apiClient.dio.get('/users/$userId/games');
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? [];
-        
-        final List<Map<String, dynamic>> mappedGames = data.map((item) {
-          final gameData = item['game'] ?? {};
-          final gameModel = GameModel(
-            id: gameData['id_game']?.toString() ?? item['id_game'].toString(),
-            title: gameData['name'] ?? 'Jeu inconnu',
-            imageUrl: gameData['image_url'] ?? 'https://picsum.photos/id/237/200/300',
-          );
-          return {
-            'game': gameModel,
-            'hours': item['nb_hours'],
-          };
-        }).toList();
+      final games = await Provider.of<GameService>(context, listen: false).getUserGames(userId);
+      
+      final List<Map<String, dynamic>> mappedGames = games.map((game) {
+        return {
+          'game': GameModel(
+            id: game.idGame.toString(),
+            title: game.name,
+            imageUrl: game.imageUrl,
+          ),
+          'hours': 0, // Note: getUserGames currently doesn't return hours in GameModelDetailed
+                      // We might want to fix this in GameService/GameModelDetailed later
+        };
+      }).toList();
 
-        if (mounted) {
-          setState(() {
-            _addedGames = mappedGames;
-            _isLoading = false;
-          });
-        }
+      if (mounted) {
+        setState(() {
+          _addedGames = mappedGames;
+          _isLoading = false;
+        });
       }
     } catch (e) {
       debugPrint('Failed to load user games: $e');
@@ -81,10 +78,9 @@ class _AddGamesPageState extends State<AddGamesPage> {
     if (_selectedGame != null && _hoursController.text.isNotEmpty) {
       final hours = int.tryParse(_hoursController.text);
       if (hours != null && hours >= 0) {
-        // Capture context-dependent objects BEFORE any await
         final authService = context.read<AuthService>();
         final messenger = ScaffoldMessenger.of(context);
-        final userId = authService.currentUser?['id'] ?? authService.currentUser?['id_user'];
+        final userId = authService.currentUser?.id;
 
         if (userId == null) {
           messenger.showSnackBar(
@@ -94,17 +90,15 @@ class _AddGamesPageState extends State<AddGamesPage> {
         }
 
         try {
-          final response = await _apiClient.dio.post(
-            '/users/$userId/games',
-            data: {
-              'id_game': int.parse(_selectedGame!.id),
-              'nb_hours': hours,
-              'game_title': _selectedGame!.title,
-              'game_image_url': _selectedGame!.imageUrl,
-            },
+          final success = await Provider.of<GameService>(context, listen: false).addUserGame(
+            userId: userId,
+            gameId: int.parse(_selectedGame!.id),
+            hours: hours,
+            gameTitle: _selectedGame!.title,
+            gameImageUrl: _selectedGame!.imageUrl,
           );
 
-          if (response.statusCode == 200 || response.statusCode == 201) {
+          if (success) {
             await _fetchUserGames();
             authService.fetchUserGamesCount();
 
@@ -135,16 +129,15 @@ class _AddGamesPageState extends State<AddGamesPage> {
   }
 
   Future<void> _deleteGame(String gameId) async {
-    // Capture context-dependent objects BEFORE any await
     final authService = context.read<AuthService>();
     final messenger = ScaffoldMessenger.of(context);
-    final userId = authService.currentUser?['id'] ?? authService.currentUser?['id_user'];
+    final userId = authService.currentUser?.id;
 
     if (userId == null) return;
 
     try {
-      final response = await _apiClient.dio.delete('/users/$userId/games/$gameId');
-      if (response.statusCode == 200) {
+      final success = await Provider.of<GameService>(context, listen: false).deleteUserGame(userId, gameId);
+      if (success) {
         authService.fetchUserGamesCount();
 
         if (mounted) {
@@ -170,35 +163,26 @@ class _AddGamesPageState extends State<AddGamesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1b2838), // Steam dark background
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Retour au profil'),
-        backgroundColor: const Color(0xFF171a21),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
       ),
       body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF66c0f4)))
+        ? const LoadingView(message: "Chargement de vos jeux...")
         : SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title
-            Text(
-              'Ajouter un jeu à mon profil',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-            ),
-            const SizedBox(height: 24),
+            const SectionTitle(title: 'Ajouter un jeu à mon profil'),
+            const SizedBox(height: 12),
 
-            // Dropdown and Rating Row
             GameSearchRow(
-              availableGames: const [], // Not used anymore by GameSearchRow
+              availableGames: const [],
               selectedGame: _selectedGame,
               onGameSelected: (newValue) {
                 setState(() {
@@ -209,7 +193,6 @@ class _AddGamesPageState extends State<AddGamesPage> {
             ),
             const SizedBox(height: 24),
 
-            // Preview Card (Shown only if a game is selected)
             if (_selectedGame != null) 
               GamePreviewCard(
                 game: _selectedGame!,
@@ -217,28 +200,13 @@ class _AddGamesPageState extends State<AddGamesPage> {
               ),
 
             const Divider(color: Colors.grey),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
 
-            // Title: Jeux ajoutés
-            Text(
-              'Jeux ajoutés',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-            ),
-            const SizedBox(height: 16),
+            const SectionTitle(title: 'Jeux ajoutés'),
 
-            // List of added games
             if (_addedGames.isEmpty)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Text(
-                    "Aucun jeu ajouté pour le moment.",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                ),
+              const EmptyState(
+                message: "Aucun jeu ajouté pour le moment.",
               )
             else
               ListView.separated(

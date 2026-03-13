@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'package:front/models/game_model_detailed.dart';
 import 'package:front/services/game_service.dart';
@@ -117,10 +118,9 @@ const List<_Continent> _kContinents = [
 // CustomPainter pour dessiner la carte
 
 class _WorldMapPainter extends CustomPainter {
-  final String? hoveredContinent;
   final String? selectedContinent;
 
-  _WorldMapPainter({this.hoveredContinent, this.selectedContinent});
+  _WorldMapPainter({this.selectedContinent});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -133,14 +133,10 @@ class _WorldMapPainter extends CustomPainter {
     for (final continent in _kContinents) {
       final path = _continentPath(continent.points, size);
       final bool isSelected = continent.name == selectedContinent;
-      final bool isHovered = continent.name == hoveredContinent;
-
       final paint = Paint()
         ..color = isSelected
             ? continent.color
-            : isHovered
-                ? continent.color.withOpacity(0.75)
-                : continent.color.withOpacity(0.45)
+            : continent.color.withOpacity(0.45)
         ..style = PaintingStyle.fill;
 
       final strokePaint = Paint()
@@ -206,7 +202,6 @@ class _WorldMapPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _WorldMapPainter old) =>
-      old.hoveredContinent != hoveredContinent ||
       old.selectedContinent != selectedContinent;
 }
 
@@ -238,9 +233,7 @@ class TrendMapModal extends StatefulWidget {
 }
 
 class _TrendMapModalState extends State<TrendMapModal> {
-  final GameService _gameService = GameService();
 
-  String? _hoveredContinent;
   String? _selectedContinent;
   bool _isLoading = false;
   List<GameModelDetailed> _randomGames = [];
@@ -255,7 +248,7 @@ class _TrendMapModalState extends State<TrendMapModal> {
 
     try {
       final randomLetter = String.fromCharCode(Random().nextInt(26) + 97);
-      final games = await _gameService.searchGames(randomLetter, limit: 20);
+      final games = await Provider.of<GameService>(context, listen: false).searchGames(randomLetter, limit: 20);
       if (games.isNotEmpty) {
         games.shuffle();
         if (mounted) {
@@ -330,28 +323,16 @@ class _TrendMapModalState extends State<TrendMapModal> {
                   builder: (context, constraints) {
                     final size =
                         Size(constraints.maxWidth, constraints.maxHeight);
-                    return MouseRegion(
-                      cursor: SystemMouseCursors.click,
-                      onHover: (event) {
+                    return GestureDetector(
+                      onTapDown: (details) {
                         final hit =
-                            _hitTestContinent(event.localPosition, size);
-                        if (hit != _hoveredContinent) {
-                          setState(() => _hoveredContinent = hit);
-                        }
+                            _hitTestContinent(details.localPosition, size);
+                        if (hit != null) _fetchRandomGames(hit);
                       },
-                      onExit: (_) => setState(() => _hoveredContinent = null),
-                      child: GestureDetector(
-                        onTapDown: (details) {
-                          final hit =
-                              _hitTestContinent(details.localPosition, size);
-                          if (hit != null) _fetchRandomGames(hit);
-                        },
-                        child: CustomPaint(
-                          size: size,
-                          painter: _WorldMapPainter(
-                            hoveredContinent: _hoveredContinent,
-                            selectedContinent: _selectedContinent,
-                          ),
+                      child: CustomPaint(
+                        size: size,
+                        painter: _WorldMapPainter(
+                          selectedContinent: _selectedContinent,
                         ),
                       ),
                     );

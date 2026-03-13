@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:front/core/theme/app_theme.dart';
 
 class ProfileCard extends StatelessWidget {
   final String avatarUrl;
@@ -19,7 +20,7 @@ class ProfileCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      color: const Color(0xFF2A475E), // Match the dark blue-grey from RecommendationList
+      color: AppTheme.cardGrey,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -53,14 +54,14 @@ class ProfileCard extends StatelessWidget {
                     Text(
                       'Level $level',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[300], // Lighter grey for better contrast
+                        color: AppTheme.lightGreyText,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Last connexion: $lastConnection',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[400], // Lighter grey for better contrast
+                        color: AppTheme.greyText,
                       ),
                     ),
                   ],

@@ -42,9 +42,9 @@ class MainPage extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       children: [
         ProfileCard(
-          avatarUrl: currentUser?['profile_picture'] ?? 'https://picsum.photos/id/237/200/300',
-          username: currentUser?['username'] ?? 'User',
-          level: currentUser?['level'] ?? 1,
+          avatarUrl: currentUser?.profilePicture ?? 'https://picsum.photos/id/237/200/300',
+          username: currentUser?.username ?? 'User',
+          level: currentUser?.level ?? 1,
           lastConnection: 'Connected',
         ),
         const SizedBox(height: 24),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:front/core/theme/app_theme.dart';
+import 'package:front/shared/widgets/game_card.dart';
+import 'package:front/shared/widgets/section_title.dart';
+import 'package:front/shared/widgets/empty_state.dart';
 import 'package:front/models/recommendation_model.dart';
-import 'package:front/features/main/widgets/recommendation_card.dart';
 
 /// Displays the list of past recommendation sessions.
 /// Shows an empty state with a CTA if there are no sessions yet.
@@ -18,38 +21,12 @@ class RecommendationList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Dernières recommandations :',
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-        ),
-        const SizedBox(height: 16),
+        const SectionTitle(title: 'Dernières recommandations :'),
         if (recommendations.isEmpty)
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 32.0),
-              child: Column(
-                children: [
-                  const Text(
-                    "Aucune recommandation pour l'instant",
-                    style: TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.go('/reco'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF66c0f4),
-                    ),
-                    child: const Text(
-                      'Commencer maintenant !',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          EmptyState(
+            message: "Aucune recommandation pour l'instant",
+            buttonLabel: 'Commencer maintenant !',
+            onButtonPressed: () => context.go('/reco'),
           )
         else
           ListView.separated(
@@ -58,8 +35,12 @@ class RecommendationList extends StatelessWidget {
             itemCount: recommendations.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              return RecommendationCard(
-                recommendation: recommendations[index],
+              final reco = recommendations[index];
+              final firstGame = reco.games.isNotEmpty ? reco.games.first : null;
+              return GameCard(
+                name: "Recommandation ${reco.type}",
+                description: "Session du ${reco.createdAt.day}/${reco.createdAt.month} à ${reco.createdAt.hour}h${reco.createdAt.minute}",
+                imageUrl: firstGame?.imageUrl,
                 onTap: () => context.go('/reco'),
               );
             },

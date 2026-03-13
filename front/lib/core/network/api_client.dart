@@ -47,8 +47,9 @@ class ApiClient {
           try {
              // Create a new fresh Dio instance without interceptors for the refresh request
              // so it doesn't loop infinitely getting stuck in 401s
+             log('ApiClient: Attempting refresh at /auth/refresh...');
              final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
-             final response = await refreshDio.post('/refresh', data: {
+             final response = await refreshDio.post('/auth/refresh', data: {
                'refreshToken': refreshToken,
              });
 

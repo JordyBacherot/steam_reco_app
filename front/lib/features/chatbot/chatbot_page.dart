@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:front/models/chat_message.dart';
+import 'package:provider/provider.dart';
 import 'package:front/services/chatbot_service.dart';
+import 'package:front/core/theme/app_theme.dart';
 
 class ChatbotPage extends StatefulWidget {
   const ChatbotPage({super.key});
@@ -38,8 +40,14 @@ class _ChatbotPageState extends State<ChatbotPage> {
     }
   }
 
-  // Instanciation de notre service API
-  final ChatbotService _chatbotService = ChatbotService();
+  // No longer manually instantiating ChatbotService
+  late final ChatbotService _chatbotService;
+
+  @override
+  void initState() {
+    super.initState();
+    _chatbotService = Provider.of<ChatbotService>(context, listen: false);
+  }
 
   // Permet à l'utilisateur de réinitialiser le contexte de la discussion
   void _resetConversation() {
@@ -121,8 +129,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
         children: [
           if (message.isAssistant)
             const CircleAvatar(
-              backgroundColor: Color(0xFF2A475E),
-              child: Icon(Icons.smart_toy, color: Color(0xFF66C0F4), size: 20),
+              backgroundColor: AppTheme.darkerBlue,
+              child: Icon(Icons.smart_toy, color: AppTheme.primaryBlue, size: 20),
             ),
           const SizedBox(width: 8),
           Flexible(
@@ -130,12 +138,12 @@ class _ChatbotPageState extends State<ChatbotPage> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: message.isUser
-                    ? const Color(0xFF66C0F4).withOpacity(0.2)
-                    : const Color(0xFF2A475E),
+                    ? AppTheme.primaryBlue.withOpacity(0.2)
+                    : AppTheme.darkerBlue,
                 borderRadius: BorderRadius.circular(16),
                 border: message.isUser
                     ? Border.all(
-                        color: const Color(0xFF66C0F4).withOpacity(0.5))
+                        color: AppTheme.primaryBlue.withOpacity(0.5))
                     : null,
               ),
               child: MarkdownBody(
@@ -152,7 +160,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                   listBullet: const TextStyle(color: Colors.white),
                   code: TextStyle(
                     backgroundColor: Colors.black.withOpacity(0.4),
-                    color: const Color(0xFF66C0F4),
+                    color: AppTheme.primaryBlue,
                   ),
                 ),
               ),
@@ -161,8 +169,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
           const SizedBox(width: 8),
           if (message.isUser)
             const CircleAvatar(
-              backgroundColor: Color(0xFF66C0F4),
-              child: Icon(Icons.person, color: Color(0xFF1b2838), size: 20),
+              backgroundColor: AppTheme.primaryBlue,
+              child: Icon(Icons.person, color: AppTheme.darkBlue, size: 20),
             ),
         ],
       ),
@@ -174,7 +182,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
       padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
       decoration: BoxDecoration(
         color:
-            const Color(0xFF171a21), // Couleurs Steam pour la barre de saisie
+            AppTheme.darkerBlue, // Couleurs Steam pour la barre de saisie
         boxShadow: [
           BoxShadow(
             offset: const Offset(0, -2),
@@ -199,7 +207,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
-                  fillColor: const Color(0xFF2A475E),
+                  fillColor: AppTheme.darkBlue,
                   contentPadding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
@@ -208,11 +216,11 @@ class _ChatbotPageState extends State<ChatbotPage> {
             const SizedBox(width: 8),
             Container(
               decoration: const BoxDecoration(
-                color: Color(0xFF66C0F4), // Bouton d'envoi bleu Steam
+                color: AppTheme.primaryBlue, // Bouton d'envoi bleu Steam
                 shape: BoxShape.circle,
               ),
               child: IconButton(
-                icon: const Icon(Icons.send, color: Color(0xFF1b2838)),
+                icon: const Icon(Icons.send, color: AppTheme.darkBlue),
                 onPressed: _isLoading
                     ? null
                     : () => _handleSubmitted(_textController.text),
@@ -227,6 +235,7 @@ class _ChatbotPageState extends State<ChatbotPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Assistant IA'),
         elevation: 1,

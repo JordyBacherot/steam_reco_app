@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:front/models/game_model.dart';
 import 'package:front/services/game_service.dart';
+import 'package:front/core/theme/app_theme.dart';
 
 class GameSearchRow extends StatefulWidget {
   final List<GameModel> availableGames;
@@ -59,7 +61,7 @@ class _GameSearchRowState extends State<GameSearchRow> {
                     return const Iterable<GameModel>.empty();
                   }
                   try {
-                    final games = await GameService().searchGames(
+                    final games = await Provider.of<GameService>(context, listen: false).searchGames(
                       textEditingValue.text,
                       limit: 15,
                     );
@@ -84,7 +86,7 @@ class _GameSearchRowState extends State<GameSearchRow> {
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: const Color(0xFF2A475E),
+                      fillColor: AppTheme.darkerBlue,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -108,7 +110,7 @@ class _GameSearchRowState extends State<GameSearchRow> {
                   return Align(
                     alignment: Alignment.topLeft,
                     child: Material(
-                      color: const Color(0xFF2A475E),
+                      color: AppTheme.darkerBlue,
                       elevation: 4.0,
                       borderRadius: BorderRadius.circular(8),
                       child: ConstrainedBox(
@@ -152,7 +154,7 @@ class _GameSearchRowState extends State<GameSearchRow> {
               Container(
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2A475E),
+                  color: AppTheme.darkerBlue,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Stack(

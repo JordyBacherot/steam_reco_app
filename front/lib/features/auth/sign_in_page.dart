@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
+import 'package:front/core/theme/app_theme.dart';
+import 'package:front/shared/widgets/app_text_field.dart';
 
 /// The SignInPage allows users to log into the application.
 class SignInPage extends StatefulWidget {
@@ -12,45 +14,22 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
-  // Controllers to retrieve the text entered by the user
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
-    // Clean up controllers when the widget is disposed to prevent memory leaks
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  /// Helper method to build consistent text fields
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String labelText,
-    bool obscureText = false,
-  }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: const TextStyle(color: Colors.white70),
-        filled: true,
-        fillColor: Colors.white.withOpacity(0.1),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 32.0),
@@ -58,19 +37,16 @@ class _SignInPageState extends State<SignInPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 1. Title
-              const Text(
+              Text(
                 'Connexion',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 32,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
               const SizedBox(height: 32),
 
-              // 2. Steam Logo
               Image.network(
                 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Steam_icon_logo.svg/512px-Steam_icon_logo.svg.png',
                 width: 120,
@@ -79,22 +55,20 @@ class _SignInPageState extends State<SignInPage> {
               ),
               const SizedBox(height: 48),
 
-              // 3. Email Input
-              _buildTextField(
+              AppTextField(
                 controller: _usernameController,
                 labelText: 'Email',
+                keyboardType: TextInputType.emailAddress,
               ),
               const SizedBox(height: 16),
 
-              // 4. Password Input
-              _buildTextField(
+              AppTextField(
                 controller: _passwordController,
                 labelText: 'Password',
                 obscureText: true,
               ),
               const SizedBox(height: 32),
 
-              // 5. Login Button
               _isLoading ? const Center(child: CircularProgressIndicator()) : ElevatedButton(
                 onPressed: () async {
                   final email = _usernameController.text.trim();
@@ -109,7 +83,7 @@ class _SignInPageState extends State<SignInPage> {
 
                   setState(() => _isLoading = true);
                   
-                  final authService = context.read<AuthService>();
+                  final authService = Provider.of<AuthService>(context, listen: false);
                   final success = await authService.signIn(email, password);
                   
                   if (!mounted) return;
@@ -117,8 +91,7 @@ class _SignInPageState extends State<SignInPage> {
                   setState(() => _isLoading = false);
 
                   if (success) {
-                    // GoRouter will automatically redirect to '/' because of refreshListenable
-                    // But we can explicitly go there too if we want
+                    if (mounted) FocusScope.of(context).unfocus();
                     context.go('/'); 
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -126,31 +99,16 @@ class _SignInPageState extends State<SignInPage> {
                     );
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  backgroundColor: Colors.blueAccent,
-                ),
-                child: const Text(
-                  'Se connecter',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+                child: const Text('Se connecter'),
               ),
               const SizedBox(height: 24),
 
-              // 6. Navigation to Sign Up Page
               TextButton(
                 onPressed: () => context.push('/sign-up'),
                 child: const Text(
                   "Pas de compte ? s'en créer un",
                   style: TextStyle(
-                    color: Colors.blueAccent,
+                    color: AppTheme.primaryBlue,
                     decoration: TextDecoration.underline,
                   ),
                 ),

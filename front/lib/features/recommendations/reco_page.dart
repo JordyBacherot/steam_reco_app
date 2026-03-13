@@ -5,6 +5,8 @@ import 'package:front/core/network/api_client.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:front/features/recommendations/trend_map_modal.dart';
+import 'package:front/core/theme/app_theme.dart';
+import 'package:front/shared/widgets/status_views.dart';
 
 class RecoPage extends StatefulWidget {
   const RecoPage({super.key});
@@ -14,7 +16,6 @@ class RecoPage extends StatefulWidget {
 }
 
 class _RecoPageState extends State<RecoPage> {
-  final ApiClient _apiClient = ApiClient();
 
   /// Builds a clickable card for a recommendation type
   Widget _buildRecoCard({
@@ -27,22 +28,20 @@ class _RecoPageState extends State<RecoPage> {
     required String disabledReason,
     required VoidCallback onPressed,
   }) {
-    final isHovering = false; // Add hover logic if using desktop/web
     return Opacity(
       opacity: isEnabled ? 1.0 : 0.6,
       child: Card(
-        color: const Color(0xFF171a21),
+        color: AppTheme.darkerBlue,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: isEnabled ? const Color(0xFF66c0f4) : Colors.grey[800]!,
+            color: isEnabled ? AppTheme.primaryBlue : Colors.grey[800]!,
             width: isEnabled ? 2 : 1,
           ),
         ),
         elevation: isEnabled ? 8 : 0,
-        child: InkWell(
+        child: GestureDetector(
           onTap: isEnabled ? onPressed : null,
-          borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -58,7 +57,7 @@ class _RecoPageState extends State<RecoPage> {
                           height: 40,
                           colorFilter: ColorFilter.mode(
                             isEnabled
-                                ? const Color(0xFF66c0f4)
+                                ? AppTheme.primaryBlue
                                 : Colors.grey[500]!,
                             BlendMode.srcIn,
                           ),
@@ -69,7 +68,7 @@ class _RecoPageState extends State<RecoPage> {
                           width: 40,
                           height: 40,
                           color: isEnabled
-                              ? const Color(0xFF66c0f4)
+                              ? AppTheme.primaryBlue
                               : Colors.grey[500],
                         )
                     else if (icon != null)
@@ -77,7 +76,7 @@ class _RecoPageState extends State<RecoPage> {
                         icon,
                         size: 40,
                         color: isEnabled
-                            ? const Color(0xFF66c0f4)
+                            ? AppTheme.primaryBlue
                             : Colors.grey[500],
                       ),
                     const SizedBox(width: 16),
@@ -98,7 +97,7 @@ class _RecoPageState extends State<RecoPage> {
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey[400],
+                        color: AppTheme.greyText,
                       ),
                 ),
                 if (!isEnabled) ...[
@@ -139,13 +138,13 @@ class _RecoPageState extends State<RecoPage> {
                         Text(
                           'Découvrir',
                           style: TextStyle(
-                            color: Color(0xFF66c0f4),
+                            color: AppTheme.primaryBlue,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         SizedBox(width: 4),
                         Icon(Icons.arrow_forward,
-                            color: Color(0xFF66c0f4), size: 18),
+                            color: AppTheme.primaryBlue, size: 18),
                       ],
                     ),
                   ),
@@ -160,21 +159,19 @@ class _RecoPageState extends State<RecoPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = context.watch<AuthService>();
+    final authService = Provider.of<AuthService>(context);
     final currentUser = authService.currentUser;
-    final steamIdRaw = currentUser?['steam_id'];
-    final String steamId = steamIdRaw != null ? steamIdRaw.toString() : '';
+    final String steamId = currentUser?.steamId ?? '';
     final bool hasSteamId = steamId.isNotEmpty;
 
     final int addedGamesCount = authService.addedGamesCount;
     final bool hasEnoughGames = addedGamesCount >= 3;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF1b2838), // Steam dark background
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text('Recommandations'),
-        backgroundColor: const Color(0xFF171a21),
-        automaticallyImplyLeading: false, // Because it's a bottom nav tab
+        automaticallyImplyLeading: false,
       ),
       body: ListView(
         padding: const EdgeInsets.all(24.0),
@@ -189,7 +186,7 @@ class _RecoPageState extends State<RecoPage> {
           const SizedBox(height: 8),
           Text(
             'Choisissez sur quelle base notre système doit vous recommander de nouveaux jeux.',
-            style: TextStyle(color: Colors.grey[400], fontSize: 16),
+            style: const TextStyle(color: AppTheme.greyText, fontSize: 16),
           ),
           const SizedBox(height: 32),
 

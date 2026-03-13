@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
+import 'package:front/core/theme/app_theme.dart';
 
 class NavigationWrapper extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -13,41 +14,31 @@ class NavigationWrapper extends StatelessWidget {
 
   // Cette fonction est appelée automatiquement quand on clique sur un onglet.
   void _onItemTapped(BuildContext context, int index) {
-    // Intercept the tap on the 'Deconnexion' icon (index 4)
-    // to perform a logout action instead of navigating.
     if (index == 4) {
-      // Execute the logout and GoRouter will redirect automatically
-      context.read<AuthService>().logout();
+      Provider.of<AuthService>(context, listen: false).logout();
       return;
     }
 
-    // Si on tape sur l'onglet déjà actif ET qu'il y a des pages empilées,
-    // on remonte d'un niveau (retour arrière) au lieu de réinitialiser la branche.
     if (index == navigationShell.currentIndex && context.canPop()) {
       context.pop();
       return;
     }
 
-    // Use branch navigation for tabs 0 to 3
     navigationShell.goBranch(
       index,
-      // A common pattern when using bottom navigation bars is to support
-      // navigating to the initial location when tapping the item that is
-      // already active.
       initialLocation: index == navigationShell.currentIndex,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Scaffold est le squelette visuel de base d'une page (ou de l'app entière).
     return Scaffold(
-      backgroundColor: const Color(0xFF1b2838),
       body: navigationShell,
+      resizeToAvoidBottomInset: false,
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: const Color(0xFF171a21),
-        selectedItemColor: const Color(0xFF66c0f4),
-        unselectedItemColor: Colors.grey,
+        backgroundColor: AppTheme.darkerBlue,
+        selectedItemColor: AppTheme.primaryBlue,
+        unselectedItemColor: AppTheme.greyText,
         currentIndex: navigationShell.currentIndex,
         onTap: (index) => _onItemTapped(context, index),
         type: BottomNavigationBarType.fixed,
@@ -55,7 +46,6 @@ class NavigationWrapper extends StatelessWidget {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
           BottomNavigationBarItem(
               icon: Icon(Icons.explore), label: 'Découvrir'),
-          // L'icône de l'onglet Chatbot
           BottomNavigationBarItem(
               icon: Icon(Icons.chat_bubble), label: 'Chatbot'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profil'),
