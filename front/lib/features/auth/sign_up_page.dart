@@ -1,12 +1,11 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:front/services/auth_service.dart';
 import 'package:front/core/theme/app_theme.dart';
-import 'package:front/shared/widgets/app_text_field.dart';
-import 'package:front/features/auth/widgets/profile_picture_picker.dart';
+import 'package:front/features/auth/widgets/profile_picture_picker_wrapper.dart';
+import 'package:front/features/auth/widgets/sign_up_form_fields.dart';
+import 'package:front/features/auth/widgets/sign_up_button.dart';
 
-/// The registration page where new users can create an account.
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -14,13 +13,12 @@ class SignUpPage extends StatefulWidget {
   State<SignUpPage> createState() => _SignUpPageState();
 }
 
-/// State for [SignUpPage] managing account creation and profile setup.
 class _SignUpPageState extends State<SignUpPage> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  
-  bool _isLoading = false;
+
+  final ProfilePicturePickerWrapper _pictureWrapper = const ProfilePicturePickerWrapper();
 
   @override
   void dispose() {
@@ -30,14 +28,13 @@ class _SignUpPageState extends State<SignUpPage> {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 48),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -46,73 +43,30 @@ class _SignUpPageState extends State<SignUpPage> {
                 'Création de compte',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
               ),
               const SizedBox(height: 32),
 
-              ProfilePicturePicker(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Séléctionner une image (à implémenter)')),
-                  );
-                },
-              ),
+              // Profile picture
+              _pictureWrapper,
               const SizedBox(height: 48),
 
-              AppTextField(
-                controller: _usernameController,
-                labelText: 'Username',
-              ),
-              const SizedBox(height: 16),
-
-              AppTextField(
-                controller: _emailController,
-                labelText: 'Email',
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-
-              AppTextField(
-                controller: _passwordController,
-                labelText: 'Password',
-                obscureText: true,
+              // Form fields
+              SignUpFormFields(
+                usernameController: _usernameController,
+                emailController: _emailController,
+                passwordController: _passwordController,
               ),
               const SizedBox(height: 32),
 
-              _isLoading ? const Center(child: CircularProgressIndicator()) : ElevatedButton(
-                onPressed: () async {
-                  final username = _usernameController.text.trim();
-                  final email = _emailController.text.trim();
-                  final password = _passwordController.text.trim();
-
-                  if (username.isEmpty || email.isEmpty || password.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Veuillez remplir les champs obligatoires')),
-                    );
-                    return;
-                  }
-
-                  setState(() => _isLoading = true);
-                  
-                  final authService = Provider.of<AuthService>(context, listen: false);
-                  final success = await authService.signUp(username, email, password);
-                  
-                  if (!mounted) return;
-                  
-                  setState(() => _isLoading = false);
-
-                  if (success) {
-                    if (mounted) FocusScope.of(context).unfocus();
-                    context.go('/');
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Échec de la création de compte.')),
-                    );
-                  }
-                },
-                child: const Text('Créer un compte'),
+              // Sign-up button
+              SignUpButton(
+                usernameController: _usernameController,
+                emailController: _emailController,
+                passwordController: _passwordController
+                //profileImage: _pictureWrapper.selectedImage,zzzzzz
               ),
               const SizedBox(height: 24),
 

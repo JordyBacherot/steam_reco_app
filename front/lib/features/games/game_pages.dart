@@ -66,7 +66,7 @@ class _GamePagesState extends State<GamePages> {
 
       List<NearGameModel> recos = [];
       try {
-        recos = await Provider.of<GameService>(context, listen: false).getNearestGames(intId)
+        recos = await Provider.of<GameService>(context, listen: false).getNearestGames(details.name)
             .timeout(const Duration(seconds: 5), onTimeout: () => []);
       } catch (_) {}
 
