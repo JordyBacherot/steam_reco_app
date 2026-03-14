@@ -23,7 +23,7 @@ export class Review {
   @JoinColumn({ name: "id_game" })
   game!: Game;
 
-  @ManyToOne("User", (user: User) => user.reviews)
+  @ManyToOne("User", (user: User) => user.reviews, { onDelete: "CASCADE" })
   @JoinColumn({ name: "id_user" })
   user!: User;
 

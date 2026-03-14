@@ -15,7 +15,7 @@ export class SteamUser {
   @Column()
   id_user!: number;
 
-  @OneToOne("User", (user: User) => user.steamUser)
+  @OneToOne("User", (user: User) => user.steamUser, { onDelete: "CASCADE" })
   @JoinColumn({ name: "id_user" })
   user!: User;
 

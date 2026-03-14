@@ -17,7 +17,7 @@ export class AIRecommendation {
   @PrimaryColumn()
   id_game!: number;
 
-  @ManyToOne("User", (user: User) => user.aiRecommendations)
+  @ManyToOne("User", (user: User) => user.aiRecommendations, { onDelete: "CASCADE" })
   @JoinColumn({ name: "id_user" })
   user!: User;
 

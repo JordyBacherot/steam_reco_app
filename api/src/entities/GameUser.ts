@@ -16,7 +16,7 @@ export class GameUser {
   @PrimaryColumn()
   id_game!: number;
 
-  @ManyToOne("User", (user: User) => user.library)
+  @ManyToOne("User", (user: User) => user.library, { onDelete: "CASCADE" })
   @JoinColumn({ name: "id_user" })
   user!: User;
 

@@ -225,6 +225,30 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Permanently deletes the current user's account, then logs out.
+  Future<bool> deleteAccount() async {
+    final userId = _currentUser?.id;
+    if (userId == null) return false;
+
+    try {
+      log('AuthService: Deleting account for user $userId...');
+      final response = await _apiClient.dio.delete('/users/$userId');
+
+      if (response.statusCode == 200) {
+        log('AuthService: Account deleted successfully.');
+        await logout();
+        return true;
+      }
+      return false;
+    } on DioException catch (e) {
+      log('AuthService: Account deletion failed: ${e.response?.data}');
+      return false;
+    } catch (e) {
+      log('AuthService: Unexpected error deleting account: $e');
+      return false;
+    }
+  }
+
   /// Internal method to fetch the current user profile
   /// Returns true if the profile was successfully fetched and state updated
   Future<bool> _fetchProfile() async {

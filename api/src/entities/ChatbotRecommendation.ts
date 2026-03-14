@@ -16,7 +16,7 @@ export class ChatbotRecommendation {
   @Column()
   id_user!: number;
 
-  @ManyToOne("User", (user: User) => user.chatbotRecommendations)
+  @ManyToOne("User", (user: User) => user.chatbotRecommendations, { onDelete: "CASCADE" })
   @JoinColumn({ name: "id_user" })
   user!: User;
 
