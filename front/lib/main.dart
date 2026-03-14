@@ -33,14 +33,16 @@ Future<void> main() async {
         Provider<ApiClient>.value(value: apiClient),
         Provider<SecureStorage>.value(value: secureStorage),
         ChangeNotifierProvider<AuthService>.value(value: authService),
-        Provider<GameService>(create: (context) => GameService(apiClient)),
+        ChangeNotifierProvider<GameService>(
+          create: (context) => GameService(apiClient),
+        ),
         Provider<RecommendationService>(
-            create: (context) => RecommendationService(apiClient)),
+          create: (context) => RecommendationService(apiClient)),
         Provider<ChatbotService>(create: (context) => ChatbotService(apiClient)),
       ],
-      child: const MainApp(),
-    ),
-  );
+    child: const MainApp(),
+  ),
+);
 }
 
 /// Root widget of the application.

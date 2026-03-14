@@ -107,7 +107,6 @@ class AuthService extends ChangeNotifier {
 
         if (_isAuthenticated) {
           log('AuthService: Session recovered successfully for user: ${_currentUser?.username}');
-          await fetchUserGamesCount();
         } else {
           log('AuthService: Session recovery failed after all attempts.');
           await logout(); // Clear any stale tokens
@@ -182,9 +181,6 @@ class AuthService extends ChangeNotifier {
         
         _isAuthenticated = true;
         notifyListeners();
-        
-        // Fetch user games count in the background.
-        fetchUserGamesCount();
         return true;
       }
       return false;
@@ -304,23 +300,6 @@ class AuthService extends ChangeNotifier {
       }
     } catch (e) {
       log('Failed to fetch steam user info (user may not have linked steam): $e');
-    }
-  }
-
-  /// Public method to fetch and update the number of games the user added manually
-  Future<void> fetchUserGamesCount() async {
-    final userId = _currentUser?.id;
-    if (userId == null) return;
-
-    try {
-      final response = await _apiClient.dio.get('/users/$userId/games');
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data'] ?? [];
-        _addedGamesCount = data.length;
-        notifyListeners();
-      }
-    } catch (e) {
-      log('Failed to load user games count: $e');
     }
   }
 

@@ -80,6 +80,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
       final hours = int.tryParse(_hoursController.text);
       if (hours != null && hours >= 0) {
         final authService = context.read<AuthService>();
+        final gameService = context.read<GameService>();
         final messenger = ScaffoldMessenger.of(context);
         final userId = authService.currentUser?.id;
 
@@ -101,7 +102,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
 
           if (success) {
             await _fetchUserGames();
-            authService.fetchUserGamesCount();
+            gameService.getUserGamesCount(userId);
 
             if (mounted) {
               setState(() {
@@ -131,6 +132,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
 
   Future<void> _deleteGame(String gameId) async {
     final authService = context.read<AuthService>();
+    final gameService = context.read<GameService>();
     final messenger = ScaffoldMessenger.of(context);
     final userId = authService.currentUser?.id;
 
@@ -139,7 +141,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
     try {
       final success = await Provider.of<GameService>(context, listen: false).deleteUserGame(userId, gameId);
       if (success) {
-        authService.fetchUserGamesCount();
+        gameService.getUserGamesCount(userId);
 
         if (mounted) {
           setState(() {

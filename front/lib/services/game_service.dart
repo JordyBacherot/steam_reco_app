@@ -3,12 +3,14 @@ import 'package:front/models/game_model_detailed.dart';
 import 'package:front/models/near_game_model.dart';
 import 'package:front/models/review_model.dart';
 import 'dart:developer';
+import 'package:flutter/material.dart';
+
 
 /// Service responsible for all game-related HTTP requests.
 /// 
 /// Communicates with the backend API to retrieve game data, 
 /// similar games, and manage user libraries.
-class GameService {
+class GameService extends ChangeNotifier {
   final ApiClient _apiClient;
 
   GameService(this._apiClient);
@@ -91,6 +93,25 @@ class GameService {
       log('GameService: Failed to fetch user library: $e');
     }
     return [];
+  }
+
+  /// Retrieves the number of games in a specific user's library.
+  Future<int> getUserGamesCount(int userId) async {
+    log('GameService: Fetching library count for user $userId...');
+    try {
+      final response = await _apiClient.dio.get('/users/$userId/games/count');
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        if (data['success'] == true && data['data'] != null) {
+          notifyListeners();
+          return data['data']['count'] ?? 0;
+        }
+      }
+    } catch (e) {
+      log('GameService: Failed to fetch user library count: $e');
+    }
+    return 0;
   }
 
   /// Adds a game to the user's library with the specified [hoursPlayed].
