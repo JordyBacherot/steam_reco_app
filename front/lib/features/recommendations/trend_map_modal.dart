@@ -1,7 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:front/models/game_model_detailed.dart';
 import 'package:front/services/game_service.dart';
 
@@ -430,6 +429,11 @@ class _TrendMapModalState extends State<TrendMapModal> {
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        onTap: () {
+          // Return the game ID as the dialog result.
+          // Navigation is handled by the caller AFTER the dialog is fully disposed.
+          Navigator.of(context).pop(game.idGame);
+        },
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(4),
           child: Image.network(
