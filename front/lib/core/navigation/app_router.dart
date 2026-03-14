@@ -9,7 +9,7 @@ import 'package:front/features/profile/profile_page.dart';
 import 'package:front/features/profile/add_games_page.dart';
 import 'package:front/features/auth/sign_in_page.dart';
 import 'package:front/features/auth/sign_up_page.dart';
-import 'package:front/features/games/game_pages.dart';
+import 'package:front/features/games/widgets/game_pages.dart';
 import 'package:front/services/auth_service.dart';
 
 /// Centralized navigation configuration for the application using [GoRouter].
