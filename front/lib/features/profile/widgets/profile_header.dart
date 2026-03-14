@@ -4,16 +4,9 @@ import 'package:front/features/profile/widgets/steam_id_dialog.dart';
 
 /// Header section of the profile page displaying user identity.
 class ProfileHeader extends StatelessWidget {
-  /// The user's screen name.
   final String username;
-  
-  /// The user's verified email address.
   final String email;
-  
-  /// The user's unique Steam 64 ID.
   final String steamId;
-  
-  /// The user's profile picture URL.
   final String avatarUrl;
 
   const ProfileHeader({

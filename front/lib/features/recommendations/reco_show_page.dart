@@ -30,6 +30,11 @@ class _RecoShowPageState extends State<RecoShowPage> {
     _fetchRecommendations();
   }
 
+  String? getFullImageUrl(String? appid) {
+    if (appid == null || appid.isEmpty) return null; // avoid broken URLs
+    return 'https://cdn.akamai.steamstatic.com/steam/apps/$appid/capsule_184x69.jpg';
+  }
+
   /// Fetches recommendations depending on type (Steam or manual)
   Future<void> _fetchRecommendations() async {
     final authService = Provider.of<AuthService>(context, listen: false);
@@ -124,8 +129,7 @@ class _RecoShowPageState extends State<RecoShowPage> {
         final int? appid = reco['appid'] is int
             ? reco['appid']
             : int.tryParse(reco['appid']?.toString() ?? '');
-        final String? rawImage = reco['image_url'] ?? reco['header_image'];
-        final String? image = rawImage?.isEmpty == true ? null : rawImage;
+        final String? image = appid != null ? getFullImageUrl(appid.toString()) : null;
         final String desc = reco['description'] ?? reco['short_description'] ?? 'Pas de description';
         final String name = reco['name'] ?? reco['title'] ?? 'Jeu inconnu';
 
