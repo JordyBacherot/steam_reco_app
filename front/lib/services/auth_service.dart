@@ -201,9 +201,9 @@ class AuthService extends ChangeNotifier {
   Future<bool> signUp(String username, String email, String password) async {
     try {
       final response = await _apiClient.dio.post('/auth/signup', data: {
+        'username': username,
         'email': email,
         'password': password,
-        'username': username,
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {

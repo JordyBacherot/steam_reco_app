@@ -1,6 +1,7 @@
 import 'package:front/core/network/api_client.dart';
 import 'package:front/models/game_model_detailed.dart';
 import 'package:front/models/near_game_model.dart';
+import 'package:front/models/review_model.dart';
 import 'dart:developer';
 
 /// Service responsible for all game-related HTTP requests.
@@ -146,5 +147,40 @@ class GameService {
       log('GameService: Failed to fetch trending for $continent: $e');
     }
     return [];
+  }
+
+  /// Fetches all reviews for a specific game.
+  Future<List<ReviewModel>> getReviewsForGame(int gameId) async {
+    log('GameService: Fetching reviews for game $gameId...');
+    try {
+      final response = await _apiClient.dio.get('/reviews/game/$gameId');
+      if (response.statusCode == 200) {
+        final List<dynamic> data = response.data;
+        return data.map((j) => ReviewModel.fromJson(j)).toList();
+      }
+    } catch (e) {
+      log('GameService: Failed to fetch reviews for game $gameId: $e');
+    }
+    return [];
+  }
+
+  /// Posts a new review for a game.
+  Future<bool> postReview({
+    required int gameId,
+    required int userId,
+    required String text,
+  }) async {
+    log('GameService: Posting review for game $gameId by user $userId...');
+    try {
+      final response = await _apiClient.dio.post('/reviews', data: {
+        'id_game': gameId,
+        'id_user': userId,
+        'text': text,
+      });
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      log('GameService: Failed to post review for game $gameId: $e');
+    }
+    return false;
   }
 }

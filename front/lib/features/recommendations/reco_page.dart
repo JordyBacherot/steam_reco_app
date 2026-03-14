@@ -91,15 +91,17 @@ class _RecoPageState extends State<RecoPage> {
             title: 'Trend dans le monde',
             description:
                 'Découvrez les jeux les plus populaires et tendances du moment à travers le monde.',
-            isEnabled: true, // Always enabled
-            disabledReason: '', // No disabled reason
-            onPressed: () {
-              // Show a modal with a world trend map
-              if (!mounted) return;
-              showDialog(
+            isEnabled: true,
+            disabledReason: '',
+            onPressed: () async {
+              // Await the dialog: it returns the selected game ID (int) or null.
+              final int? gameId = await showDialog<int>(
                 context: context,
                 builder: (context) => const TrendMapModal(),
               );
+              if (gameId != null && mounted) {
+                context.push('/reco/game/$gameId');
+              }
             },
             leading: Icon(
               Icons.public,
