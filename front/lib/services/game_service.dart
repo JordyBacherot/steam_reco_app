@@ -58,20 +58,20 @@ class GameService {
     return null;
   }
 
-  /// Fetches a list of games similar to the one identified by [id].
+  /// Fetches a list of games similar to the one identified by [query].
   ///
   /// Similarity is determined by backend recommendation algorithms.
-  Future<List<NearGameModel>> getNearestGames(int id) async {
-    log('GameService: Fetching nearest games for $id...');
+  Future<List<NearGameModel>> getNearestGames(String query) async {
+    log('GameService: Fetching nearest games for "$query"...');
     try {
-      final response = await _apiClient.dio.get('/games/$id/nearest');
+      final response = await _apiClient.dio.get('/recommendations/nearest_games/$query');
 
       if (response.statusCode == 200) {
-        final List data = response.data['data'] ?? [];
+        final List data = response.data['nearest_games'] ?? [];
         return data.map((json) => NearGameModel.fromJson(json)).toList();
       }
     } catch (e) {
-      log('GameService: Failed to fetch nearest games for $id: $e');
+      log('GameService: Failed to fetch nearest games for "$query": $e');
     }
     return [];
   }
@@ -102,7 +102,7 @@ class GameService {
   }) async {
     log('GameService: Adding game $gameId ("$gameTitle") for user $userId with $hours hours...');
     try {
-      final response = await _apiClient.dio.post('/user-games', data: {
+      final response = await _apiClient.dio.post('/users/$userId/games', data: {
         'id_user': userId,
         'id_game': gameId,
         'nb_hours': hours,
@@ -123,7 +123,7 @@ class GameService {
     try {
       // Assuming backend supports DELETE /user-games/:userId/:gameId or similar
       // Or a generic DELETE with body if it matches the current implementation
-      final response = await _apiClient.dio.delete('/user-games/$userId/$gameId');
+      final response = await _apiClient.dio.delete('/users/$userId/games/$gameId');
 
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {

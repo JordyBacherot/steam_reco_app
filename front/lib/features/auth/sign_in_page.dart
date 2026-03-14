@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:front/services/auth_service.dart';
 import 'package:front/core/theme/app_theme.dart';
-import 'package:front/shared/widgets/app_text_field.dart';
+import 'package:front/features/auth/widgets/sign_in_form_fields.dart';
+import 'package:front/features/auth/widgets/sign_in_button.dart';
+import 'package:front/shared/widgets/steam_logo.dart';
 
 /// The login page allowing users to authenticate with their email and password.
 class SignInPage extends StatefulWidget {
@@ -13,19 +13,16 @@ class SignInPage extends StatefulWidget {
   State<SignInPage> createState() => _SignInPageState();
 }
 
-/// State for [SignInPage] managing form input and authentication flow.
 class _SignInPageState extends State<SignInPage> {
-  final _usernameController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -38,72 +35,42 @@ class _SignInPageState extends State<SignInPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+
+              // Logo (SVG)
+              Center(
+                child: SteamLogo(
+                  size: 120,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 48),
+
+              // Title
               Text(
                 'Connexion',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
               ),
               const SizedBox(height: 32),
 
-              Image.network(
-                'https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Steam_icon_logo.svg/512px-Steam_icon_logo.svg.png',
-                width: 120,
-                height: 120,
-                color: Colors.white,
-              ),
-              const SizedBox(height: 48),
-
-              AppTextField(
-                controller: _usernameController,
-                labelText: 'Email',
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-
-              AppTextField(
-                controller: _passwordController,
-                labelText: 'Password',
-                obscureText: true,
+              // Form fields
+              SignInFormFields(
+                emailController: _emailController,
+                passwordController: _passwordController,
               ),
               const SizedBox(height: 32),
 
-              _isLoading ? const Center(child: CircularProgressIndicator()) : ElevatedButton(
-                onPressed: () async {
-                  final email = _usernameController.text.trim();
-                  final password = _passwordController.text.trim();
-
-                  if (email.isEmpty || password.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Veuillez remplir tous les champs')),
-                    );
-                    return;
-                  }
-
-                  setState(() => _isLoading = true);
-                  
-                  final authService = Provider.of<AuthService>(context, listen: false);
-                  final success = await authService.signIn(email, password);
-                  
-                  if (!mounted) return;
-                  
-                  setState(() => _isLoading = false);
-
-                  if (success) {
-                    if (mounted) FocusScope.of(context).unfocus();
-                    context.go('/'); 
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Échec de la connexion. Vérifiez vos identifiants.')),
-                    );
-                  }
-                },
-                child: const Text('Se connecter'),
+              // Login button
+              SignInButton(
+                emailController: _emailController,
+                passwordController: _passwordController,
               ),
               const SizedBox(height: 24),
 
+              // Navigate to Sign Up page
               TextButton(
                 onPressed: () => context.push('/sign-up'),
                 child: const Text(

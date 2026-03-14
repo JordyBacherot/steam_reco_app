@@ -77,7 +77,7 @@ class ProfilePage extends StatelessWidget {
                             final g = game as GameModelDetailed;
                             return GameCard(
                               name: g.name,
-                              description: "Dans votre bibliothèque",
+                              description: g.hours != null ? "${g.hours} heures jouées" : "Dans votre bibliothèque",
                               imageUrl: g.imageUrl,
                               gameId: g.idGame,
                               onTap: () => context.push('/profile/game/${g.idGame}'),

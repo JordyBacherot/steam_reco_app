@@ -59,8 +59,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
             title: game.name,
             imageUrl: game.imageUrl,
           ),
-          'hours': 0, // Note: getUserGames currently doesn't return hours in GameModelDetailed
-                      // We might want to fix this in GameService/GameModelDetailed later
+          'hours': game.hours ?? 0,
         };
       }).toList();
 

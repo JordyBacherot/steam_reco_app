@@ -20,6 +20,9 @@ class GameModelDetailed {
   /// The studio that developed the game.
   final String? studio;
 
+  /// Number of hours played (optional, usually from library).
+  final int? hours;
+
   const GameModelDetailed({
     required this.idGame,
     required this.name,
@@ -27,6 +30,7 @@ class GameModelDetailed {
     String? imageUrl,
     this.studio,
     this.meanReview,
+    this.hours,
   }) : _imageUrl = imageUrl ?? '';
 
   /// Returns the game's capsule image URL.
@@ -42,15 +46,21 @@ class GameModelDetailed {
 
   /// Creates a [GameModelDetailed] instance from a JSON map.
   factory GameModelDetailed.fromJson(Map<String, dynamic> json) {
+    // If the data is nested in a 'game' key (typical for library records), use that.
+    final Map<String, dynamic> gameData = json['game'] is Map<String, dynamic> 
+        ? json['game'] as Map<String, dynamic> 
+        : json;
+
     return GameModelDetailed(
-      idGame: int.parse(json['id_game'].toString()),
-      name: json['name'] as String,
-      description: json['description'] as String?,
-      imageUrl: json['image_url'] as String?,
-      studio: json['studio'] as String?,
-      meanReview: json['mean_review'] != null 
-          ? double.tryParse(json['mean_review'].toString())
+      idGame: int.parse(gameData['id_game'].toString()),
+      name: (gameData['name'] ?? gameData['game_title'] ?? '') as String,
+      description: gameData['description'] as String?,
+      imageUrl: (gameData['image_url'] ?? gameData['game_image_url']) as String?,
+      studio: gameData['studio'] as String?,
+      meanReview: gameData['mean_review'] != null 
+          ? double.tryParse(gameData['mean_review'].toString())
           : null,
+      hours: json['nb_hours'] != null ? int.tryParse(json['nb_hours'].toString()) : null,
     );
   }
 
@@ -63,6 +73,7 @@ class GameModelDetailed {
       'image_url': imageUrl,
       'studio': studio,
       'mean_review': meanReview,
+      'nb_hours': hours,
     };
   }
 }
