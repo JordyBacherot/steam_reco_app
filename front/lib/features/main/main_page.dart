@@ -6,6 +6,10 @@ import 'package:front/features/main/widgets/recommendation_list.dart';
 import 'package:front/models/recommendation_model.dart';
 import 'package:front/models/game_model.dart';
 
+/// The primary landing page of the application after authentication.
+///
+/// Displays a quick overview of the user profile and their most recent 
+/// recommendation sessions.
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
 

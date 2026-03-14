@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:front/models/game_model.dart';
 
+/// A card representing a game that has already been added to the user's library.
+///
+/// Displays the play time in hours and provides a deletion option.
 class AddedGameCard extends StatelessWidget {
+  /// The game model data for this card.
   final GameModel game;
+  
+  /// Total number of hours the user has played this game.
   final int hours;
+  
+  /// Callback triggered when the user wants to remove the game.
   final VoidCallback onDelete;
 
   const AddedGameCard({

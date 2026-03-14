@@ -1,13 +1,15 @@
 import 'package:front/core/network/api_client.dart';
 import 'dart:developer';
 
+/// Service providing high-level game recommendation flows.
 class RecommendationService {
   final ApiClient _apiClient;
 
   RecommendationService(this._apiClient);
 
-  /// Fetch recommendations from Steam based on steamId
+  /// Fetches game recommendations based on the user's connected Steam account.
   Future<List<dynamic>> getSteamRecommendations(String steamId) async {
+    log('RecommendationService: Requesting Steam-based recommendations...');
     try {
       final response = await _apiClient.dio.get('/recommendations/$steamId');
       
@@ -17,13 +19,14 @@ class RecommendationService {
       }
       return [];
     } catch (e) {
-      log("Error fetching steam recommendations: $e");
+      log('RecommendationService: Steam recommendations failed: $e');
       rethrow;
     }
   }
 
-  /// Fetch recommendations based on manual games for a specific user
+  /// Fetches game recommendations based on games manually added to the user's library.
   Future<List<dynamic>> getManualRecommendations(int userId) async {
+    log('RecommendationService: Requesting manual library recommendations...');
     try {
       // 1. Fetch user games
       final gamesResponse = await _apiClient.dio.get('/users/$userId/games');
@@ -67,22 +70,22 @@ class RecommendationService {
     }
   }
 
+  /// Identifies and parses recommendation data from various response formats.
   List<dynamic> _parseRecommendations(dynamic data) {
     if (data == null) return [];
 
-    // 1. Handle Map response
+    // Protocol: The backend may return results under 'recommendations' or 'data' keys,
+    // or as a flat list if the response structure is simplified.
     if (data is Map) {
-      // Check for error field from backend
+      // Handle explicit error messages from the backend.
       if (data.containsKey('error')) {
         throw Exception(data['error']);
       }
       
-      // Check for success flag (if backend uses it)
       if (data.containsKey('success') && data['success'] == false) {
-        throw Exception(data['message'] ?? "Erreur inconnue de l'API");
+        throw Exception(data['message'] ?? "Unknown API error.");
       }
 
-      // Try different common keys for list of items
       if (data.containsKey('recommendations') && data['recommendations'] is List) {
         return data['recommendations'];
       }
@@ -91,13 +94,11 @@ class RecommendationService {
       }
     }
 
-    // 2. Handle direct List response
     if (data is List) {
       return data;
     }
 
-    // 3. Fallback/Error
-    log("[RecommendationService] Format de réponse inattendu: $data");
-    throw Exception("Format de recommandation inattendu depuis le serveur.");
+    log("RecommendationService Error: Unexpected response format: $data");
+    throw Exception("Unexpected recommendation format from server.");
   }
 }

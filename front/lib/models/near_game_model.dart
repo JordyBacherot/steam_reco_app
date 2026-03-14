@@ -1,13 +1,14 @@
-/// Modèle représentant un jeu similaire (proche) retourné par l'algorithme de recommandation.
-/// Contient les informations minimales nécessaires pour afficher une suggestion de jeu similaire.
+/// Represents a similar (neighboring) game as determined by recommendation algorithms.
+///
+/// Contains minimal metadata required for displaying a suggestion.
 class NearGameModel {
-  /// Identifiant Steam du jeu (appid Steam)
+  /// The Steam application identifier.
   final int appid;
 
-  /// Nom du jeu
+  /// The display title of the game.
   final String name;
 
-  /// Score de similarité
+  /// The calculated similarity score relative to the reference game.
   final double score;
 
   const NearGameModel({
@@ -16,7 +17,7 @@ class NearGameModel {
     required this.score,
   });
 
-  /// Constructeur factory permettant de créer un [NearGameModel] depuis un JSON.
+  /// Creates a [NearGameModel] instance from a JSON map.
   factory NearGameModel.fromJson(Map<String, dynamic> json) {
     return NearGameModel(
       appid: int.parse(json['appid'].toString()),
@@ -25,7 +26,7 @@ class NearGameModel {
     );
   }
 
-  /// Convertit le modèle en Map JSON.
+  /// Serializes the model into a JSON map.
   Map<String, dynamic> toJson() {
     return {
       'appid': appid,

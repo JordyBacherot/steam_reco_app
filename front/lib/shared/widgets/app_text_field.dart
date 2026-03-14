@@ -1,14 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:front/core/theme/app_theme.dart';
 
-/// A standardized text field widget used across the application.
+/// A standardized text field widget used for user input across the application.
 class AppTextField extends StatelessWidget {
+  /// Controller for the text being edited.
   final TextEditingController controller;
+  
+  /// Text that describes the purpose of the field.
   final String labelText;
+  
+  /// Whether to hide the text being entered (e.g., for passwords).
   final bool obscureText;
+  
+  /// The type of keyboard to display.
   final TextInputType keyboardType;
+  
+  /// Temporary text that suggests what the user should enter.
   final String? hintText;
+  
+  /// An icon to display at the start of the text field.
   final Widget? prefixIcon;
+  
+  /// An icon to display at the end of the text field.
   final Widget? suffixIcon;
 
   const AppTextField({

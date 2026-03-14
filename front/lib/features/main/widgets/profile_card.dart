@@ -2,10 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:front/core/theme/app_theme.dart';
 
+/// A card widget that displays a concise summary of the user's profile.
+///
+/// Shows the user's avatar, username, level, and last connection status.
+/// Tapping the card navigates directly to the full profile page.
 class ProfileCard extends StatelessWidget {
+  /// The URL for the user's profile avatar.
   final String avatarUrl;
+  
+  /// The user's display name.
   final String username;
+  
+  /// The user's current progress level.
   final int level;
+  
+  /// A string indicating when the user was last active.
   final String lastConnection;
 
   const ProfileCard({

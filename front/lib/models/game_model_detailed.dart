@@ -1,22 +1,23 @@
-/// Modèle de données représentant un jeu avec ses informations détaillées.
-/// Utilisé pour afficher les détails d'un jeu (page de détail, bibliothèque utilisateur, etc.)
+/// A comprehensive data model representing detailed game information.
+///
+/// Used for display on detail pages and within the user's library.
 class GameModelDetailed {
-  /// Identifiant unique du jeu (correspond à id_game dans la base de données)
+  /// Unique database identifier for the game.
   final int idGame;
 
-  /// Nom du jeu
+  /// The official name of the game.
   final String name;
 
-  /// Description textuelle du jeu (peut être null si non renseignée)
+  /// A descriptive summary of the game.
   final String? description;
 
-  /// Note moyenne des reviews (entre 0.0 et 1.0, null si aucune review)
+  /// The average review score (ranging from 0.0 to 1.0).
   final double? meanReview;
 
-  /// URL de l'image de couverture du jeu.
+  /// Internal storage for the image URL.
   final String _imageUrl;
 
-  /// Nom du studio développeur (peut être null)
+  /// The studio that developed the game.
   final String? studio;
 
   const GameModelDetailed({
@@ -28,14 +29,18 @@ class GameModelDetailed {
     this.meanReview,
   }) : _imageUrl = imageUrl ?? '';
 
+  /// Returns the game's capsule image URL.
+  ///
+  /// Automatically generates a Steam CDN URL based on the [idGame] if no 
+  /// valid URL is provided.
   String get imageUrl {
     if (_imageUrl.isEmpty || _imageUrl.contains('picsum.photos')) {
       return 'https://cdn.akamai.steamstatic.com/steam/apps/$idGame/capsule_231x87.jpg';
     }
     return _imageUrl;
   }
-  /// Constructeur factory permettant de créer un [GameModelDetailed] depuis un JSON.
-  /// Utilisé lors du décodage des réponses de l'API.
+
+  /// Creates a [GameModelDetailed] instance from a JSON map.
   factory GameModelDetailed.fromJson(Map<String, dynamic> json) {
     return GameModelDetailed(
       idGame: int.parse(json['id_game'].toString()),
@@ -49,7 +54,7 @@ class GameModelDetailed {
     );
   }
 
-  /// Convertit le modèle en Map JSON pour l'envoi à l'API.
+  /// Serializes the model into a JSON map.
   Map<String, dynamic> toJson() {
     return {
       'id_game': idGame,

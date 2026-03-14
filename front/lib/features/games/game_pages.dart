@@ -7,7 +7,9 @@ import 'package:front/models/near_game_model.dart';
 import 'package:front/shared/widgets/status_views.dart';
 import 'package:front/core/theme/app_theme.dart';
 
+/// A detailed view page for a specific game, showing metadata and similar titles.
 class GamePages extends StatefulWidget {
+  /// The unique Steam ID of the game to display.
   final String gameId;
 
   const GamePages({super.key, required this.gameId});
@@ -16,6 +18,7 @@ class GamePages extends StatefulWidget {
   State<GamePages> createState() => _GamePagesState();
 }
 
+/// State for [GamePages] managing the combined fetch of details and similarities.
 class _GamePagesState extends State<GamePages> {
   bool _isLoading = true;
   String? _errorMessage;
@@ -46,7 +49,7 @@ class _GamePagesState extends State<GamePages> {
       final intId = int.tryParse(widget.gameId);
       if (intId == null) {
         setState(() {
-          _errorMessage = "ID invalide";
+          _errorMessage = "Invalid ID";
           _isLoading = false;
         });
         return;
@@ -55,7 +58,7 @@ class _GamePagesState extends State<GamePages> {
       final details = await Provider.of<GameService>(context, listen: false).getGameById(intId);
       if (details == null) {
         setState(() {
-          _errorMessage = "Jeu introuvable dans l'API";
+          _errorMessage = "Game not found in API";
           _isLoading = false;
         });
         return;
@@ -86,13 +89,13 @@ class _GamePagesState extends State<GamePages> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const Scaffold(resizeToAvoidBottomInset: false, body: LoadingView(message: "Chargement..."));
+    if (_isLoading) return const Scaffold(resizeToAvoidBottomInset: false, body: LoadingView(message: "Loading..."));
 
     if (_errorMessage != null || _gameDetails == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text("Erreur")),
+        appBar: AppBar(title: const Text("Error")),
         body: ErrorView(
-          message: _errorMessage ?? "Erreur inconnue",
+          message: _errorMessage ?? "Unknown error",
           onRetry: _fetchGameData,
         ),
       );
@@ -103,7 +106,7 @@ class _GamePagesState extends State<GamePages> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: Text(game.name.isNotEmpty ? game.name : "Jeu #${game.idGame}"),
+        title: Text(game.name.isNotEmpty ? game.name : "Game #${game.idGame}"),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.canPop() ? context.pop() : context.go('/'),
@@ -148,7 +151,7 @@ class _GamePagesState extends State<GamePages> {
                   ],
                   const SizedBox(height: 16),
                   Text(
-                    game.description ?? "Pas de description disponible.",
+                    game.description ?? "No description available.",
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.5),
                   ),
                   if (_nearestGames.isNotEmpty) _buildSimilarGames(),
@@ -167,7 +170,7 @@ class _GamePagesState extends State<GamePages> {
       children: [
         const SizedBox(height: 32),
         Text(
-          "Jeux Similaires :",
+          "Similar Games :",
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),

@@ -12,57 +12,66 @@ import 'package:front/features/auth/sign_up_page.dart';
 import 'package:front/features/games/game_pages.dart';
 import 'package:front/services/auth_service.dart';
 
+/// Centralized navigation configuration for the application using [GoRouter].
+///
+/// This class defines the application's routing structure, including
+/// authentication-based redirection logic and nested navigation shells.
 class AppRouter {
-  /// Crée et configure le routeur GoRouter de l'application.
+  /// Configures and returns a [GoRouter] instance.
+  ///
+  /// [authService] provides the reactive authentication state used for 
+  /// guard-based redirection.
   static GoRouter createRouter(AuthService authService) {
     return GoRouter(
-      // GoRouter écoute les changements de l'AuthService pour recalculer les redirections
+      // Monitor AuthService to re-evaluate routes when login state changes.
       refreshListenable: authService,
-      // Page initiale selon que l'utilisateur est déjà connecté ou non
+
+      // Initial route depends on current authentication status.
       initialLocation: authService.isAuthenticated ? '/' : '/sign-in',
 
+      /// Global redirection guard.
+      ///
+      /// Protects all routes except sign-in/sign-up from unauthenticated access.
+      /// Also redirects logged-in users away from authentication pages.
       redirect: (context, state) {
-        // Access auth state
         final isLoggedIn = authService.isAuthenticated;
-        
-        // Determine if we are on an auth-related page
         final isGoingToAuth = state.uri.path == '/sign-in' || state.uri.path == '/sign-up';
 
-        // While checking the token, don't redirect
+        // Do not redirect while the session status is still being determined.
         if (authService.isLoading) return null;
 
-        // If NOT logged in and trying to access a protected page -> FORCE login
+        // Force sign-in if accessing protected routes while logged out.
         if (!isLoggedIn && !isGoingToAuth) {
           return '/sign-in';
         }
 
-        // If ALREADY logged in and trying to access login/register -> Home
+        // Redirect to home if accessing auth pages while already logged in.
         if (isLoggedIn && isGoingToAuth) {
           return '/';
         }
 
-        // Pas de redirection nécessaire
         return null;
       },
       routes: [
-        // Route de connexion (accessible sans authentification)
+        // Public Authentication Routes
         GoRoute(
           path: '/sign-in',
           builder: (context, state) => const SignInPage(),
         ),
-        // Route d'inscription (accessible sans authentification)
         GoRoute(
           path: '/sign-up',
           builder: (context, state) => const SignUpPage(),
         ),
 
-        // Routes protégées avec barre de navigation inférieure.
+        /// Primary application structure with persistent bottom navigation.
+        ///
+        /// Uses [StatefulShellRoute] to maintain page state across tabs.
         StatefulShellRoute.indexedStack(
           builder: (context, state, navigationShell) {
             return NavigationWrapper(navigationShell: navigationShell);
           },
           branches: [
-            // Onglet 0 : Accueil
+            // Branch 0: Home / Library
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -81,7 +90,7 @@ class AppRouter {
               ],
             ),
 
-            // Onglet 1 : Découvrir (Recommandations)
+            // Branch 1: Discover / Recommendations
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -107,7 +116,7 @@ class AppRouter {
               ],
             ),
 
-            // Onglet 2 : Chatbot
+            // Branch 2: AI Chatbot
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -117,7 +126,7 @@ class AppRouter {
               ],
             ),
 
-            // Onglet 3 : Profil
+            // Branch 3: User Profile
             StatefulShellBranch(
               routes: [
                 GoRoute(
@@ -140,7 +149,7 @@ class AppRouter {
               ],
             ),
 
-            // Onglet 4 : Déconnexion
+            // Branch 4: Logout (Placeholder for trigger)
             StatefulShellBranch(
               routes: [
                 GoRoute(

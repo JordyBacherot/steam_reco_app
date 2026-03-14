@@ -1,13 +1,23 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'dart:developer';
 
+/// A wrapper around `FlutterSecureStorage` for managing sensitive credentials.
+///
+/// Provides high-level methods to read, write, and delete JWT access
+/// and refresh tokens securely on the device.
 class SecureStorage {
+  /// Internal storage instance.
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
+  /// Key used for the primary JWT access token.
   static const String _keyToken = 'jwt_token';
+  
+  /// Key used for the long-lived refresh token.
   static const String _keyRefreshToken = 'refresh_token';
 
-  // Read value from secure storage
+  /// Reads the primary JWT access token from secure storage.
+  ///
+  /// Returns null if the token is missing or if an error occurs.
   Future<String?> readToken() async {
     try {
       final value = await _storage.read(key: _keyToken);
@@ -19,6 +29,9 @@ class SecureStorage {
     }
   }
 
+  /// Reads the refresh token from secure storage.
+  ///
+  /// Returns null if the token is missing or if an error occurs.
   Future<String?> readRefreshToken() async {
     try {
       final value = await _storage.read(key: _keyRefreshToken);
@@ -30,7 +43,7 @@ class SecureStorage {
     }
   }
 
-  // Write value to secure storage
+  /// Persists the primary JWT access token.
   Future<void> writeToken(String value) async {
     try {
       log('SecureStorage: Writing $_keyToken...');
@@ -40,6 +53,7 @@ class SecureStorage {
     }
   }
 
+  /// Persists the long-lived refresh token.
   Future<void> writeRefreshToken(String value) async {
     try {
       log('SecureStorage: Writing $_keyRefreshToken...');
@@ -49,7 +63,9 @@ class SecureStorage {
     }
   }
 
-  // Delete value from secure storage
+  /// Deletes all stored authentication tokens.
+  ///
+  /// Usually called during logout or when a session becomes irrecoverable.
   Future<void> deleteTokens() async {
     try {
       log('SecureStorage: Deleting all tokens...');

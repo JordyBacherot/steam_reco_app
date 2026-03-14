@@ -12,6 +12,7 @@ import 'package:front/shared/widgets/section_title.dart';
 import 'package:front/shared/widgets/empty_state.dart';
 import 'package:front/shared/widgets/status_views.dart';
 
+/// A page where users can search for and add games to their personal library.
 class AddGamesPage extends StatefulWidget {
   const AddGamesPage({super.key});
 
@@ -19,6 +20,7 @@ class AddGamesPage extends StatefulWidget {
   State<AddGamesPage> createState() => _AddGamesPageState();
 }
 
+/// State for [AddGamesPage] managing game search, addition, and library synchronization.
 class _AddGamesPageState extends State<AddGamesPage> {
   bool _isLoading = true;
 

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:front/models/game_model.dart';
 
+/// A preview card shown during the search process before a game is added.
 class GamePreviewCard extends StatelessWidget {
+  /// The game metadata to preview.
   final GameModel game;
+  
+  /// Callback triggered to confirm adding the previewed game.
   final VoidCallback onAddPressed;
 
   const GamePreviewCard({

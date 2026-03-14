@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:front/services/chatbot_service.dart';
 import 'package:front/core/theme/app_theme.dart';
 
+/// An interactive page where users can chat with an AI game advisor.
+///
+/// Supports streaming responses and Markdown rendering for formatted AI advice.
 class ChatbotPage extends StatefulWidget {
   const ChatbotPage({super.key});
 
@@ -12,6 +15,7 @@ class ChatbotPage extends StatefulWidget {
   State<ChatbotPage> createState() => _ChatbotPageState();
 }
 
+/// State for [ChatbotPage] managing message history, streaming, and UI scrolling.
 class _ChatbotPageState extends State<ChatbotPage> {
   // Liste qui stocke tout l'historique de la conversation actuelle
   final List<ChatMessage> _messages = [

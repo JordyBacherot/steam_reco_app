@@ -4,10 +4,18 @@ import 'package:front/models/game_model.dart';
 import 'package:front/services/game_service.dart';
 import 'package:front/core/theme/app_theme.dart';
 
+/// A specialized row combining a game autocomplete search and an ivory hours picker.
 class GameSearchRow extends StatefulWidget {
+  /// List of games that can be suggested (currently empty for server-side search).
   final List<GameModel> availableGames;
+  
+  /// The currently selected game, if any.
   final GameModel? selectedGame;
+  
+  /// Callback triggered when a game is selected from the suggestions.
   final ValueChanged<GameModel?> onGameSelected;
+  
+  /// Controller managing the text input for hours.
   final TextEditingController hoursController;
 
   const GameSearchRow({
@@ -22,6 +30,7 @@ class GameSearchRow extends StatefulWidget {
   State<GameSearchRow> createState() => _GameSearchRowState();
 }
 
+/// State for [GameSearchRow] managing the scroll controller for the hours wheel.
 class _GameSearchRowState extends State<GameSearchRow> {
   late FixedExtentScrollController _scrollController;
   static const int _maxHours = 9999;

@@ -3,11 +3,22 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:front/core/network/secure_storage.dart';
 import 'dart:developer';
 
+/// A centralized HTTP client using the `dio` package.
+///
+/// This client is responsible for:
+/// - Configuring the base URL from environment variables.
+/// - Injecting authentication tokens into request headers.
+/// - Handling token refresh logic on 401 Unauthorized responses.
 class ApiClient {
+  /// The underlying Dio instance used for network requests.
   late Dio dio;
+  
+  /// Helper for interacting with secure storage for tokens.
   final SecureStorage _secureStorage = SecureStorage();
 
+  /// Initializes the [ApiClient] with base options and interceptors.
   ApiClient() {
+    // Determine base URL, falling back to local host if not provided.
     final baseUrl = (dotenv.env['API_URL'] ?? 'http://127.0.0.1:3000').replaceAll(RegExp(r'/$'), '');
 
     dio = Dio(BaseOptions(
@@ -19,35 +30,36 @@ class ApiClient {
       },
     ));
 
+    // Add interceptors for authentication and error recovery.
     dio.interceptors.add(
       InterceptorsWrapper(
+        /// Attaches the Bearer token to every request if available in storage.
         onRequest: (options, handler) async {
-          // Add access token to all requests if it exists
           final token = await _secureStorage.readToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
           }
           return handler.next(options);
         },
+        
+        /// Intercepts errors to handle automatic token refresh.
         onError: (DioException error, handler) async {
-          // If NOT a 401 Unauthorized, pass the error along
+          // Pass through any errors that aren't 401 Unauthorized.
           if (error.response?.statusCode != 401) {
             return handler.next(error);
           }
 
-          // If a 401 occurs, try to refresh the token gracefully
-          log('401 Unauthorized encountered. Attempting token refresh...');
+          log('ApiClient: 401 Unauthorized. Attempting token refresh...');
           final refreshToken = await _secureStorage.readRefreshToken();
 
-          // If there is no refresh token, we can't recover
+          // Cannot recover if no refresh token is present.
           if (refreshToken == null) {
              return handler.next(error);
           }
 
           try {
-             // Create a new fresh Dio instance without interceptors for the refresh request
-             // so it doesn't loop infinitely getting stuck in 401s
-             log('ApiClient: Attempting refresh at /auth/refresh...');
+             // Use a dedicated Dio instance for refresh to avoid interceptor recursion.
+             log('ApiClient: Requesting token refresh at /auth/refresh...');
              final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
              final response = await refreshDio.post('/auth/refresh', data: {
                'refreshToken': refreshToken,
@@ -55,31 +67,28 @@ class ApiClient {
 
              if (response.statusCode == 200) {
                final newAccessToken = response.data['data']['token'];
-               final newRefreshToken = response.data['data']['refreshToken']; // Backend returns a new one?
+               final newRefreshToken = response.data['data']['refreshToken'];
 
-               // Save the new tokens
+               // Persist new credentials.
                await _secureStorage.writeToken(newAccessToken);
                if (newRefreshToken != null) {
                  await _secureStorage.writeRefreshToken(newRefreshToken);
                }
 
-               // Modify the original failed request headers with the new token
+               // Retry the failed request with the new access token.
                final options = error.requestOptions;
                options.headers['Authorization'] = 'Bearer $newAccessToken';
 
-               // Retry the failed request
                final retryResponse = await dio.fetch(options);
                return handler.resolve(retryResponse);
              }
           } catch (e) {
-             log('Token refresh failed: $e');
-             // If the refresh call itself fails (e.g. refresh token expired), we log the user out.
-             // Usually accomplished by throwing an error that the AuthService catches,
-             // or resolving with an error event.
-             await _secureStorage.deleteTokens(); // Clear invalid tokens
+             log('ApiClient: Token refresh attempt failed: $e');
+             // Clear invalid tokens on failure to force a fresh login.
+             await _secureStorage.deleteTokens();
           }
           
-          return handler.next(error); // Reject the original request
+          return handler.next(error);
         },
       ),
     );

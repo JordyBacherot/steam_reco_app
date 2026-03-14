@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// A standardized title widget for sections across the app.
+/// A standardized title widget for grouping content into sections.
 class SectionTitle extends StatelessWidget {
+  /// The display text for the section header.
   final String title;
+  
+  /// Amount of padding to apply above the title.
   final double topPadding;
+  
+  /// Amount of padding to apply below the title.
   final double bottomPadding;
 
   const SectionTitle({

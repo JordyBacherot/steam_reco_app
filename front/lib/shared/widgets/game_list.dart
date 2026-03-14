@@ -38,7 +38,7 @@ class GameList extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
-            emptyMessage ?? 'Aucun jeu trouvé.',
+            emptyMessage ?? 'No games found.',
             style: const TextStyle(color: Colors.white70),
           ),
         ),

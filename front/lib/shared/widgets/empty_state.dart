@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:front/core/theme/app_theme.dart';
 
-/// A standardized widget for empty states across the app.
+/// A standardized widget for displaying empty states (e.g., no search results, empty library).
 class EmptyState extends StatelessWidget {
+  /// The message to display to the user.
   final String message;
+  
+  /// Optional label for a call-to-action button.
   final String? buttonLabel;
+  
+  /// Callback function triggered when the CTA button is pressed.
   final VoidCallback? onButtonPressed;
+  
+  /// vertical padding to apply around the content.
   final double verticalPadding;
 
   const EmptyState({

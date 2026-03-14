@@ -4,21 +4,25 @@ import 'package:dio/dio.dart';
 import 'package:front/core/network/api_client.dart';
 import 'dart:developer';
 
+/// Service managing interactions with the AI chatbot through streaming responses.
 class ChatbotService {
   final ApiClient _apiClient;
 
   ChatbotService(this._apiClient);
   
-  // Identifiant de session pour l'historique de discussion
+  /// Persistent session identifier for maintaining conversation context.
   String? currentSessionId;
 
-  /// Réinitialise la session pour démarrer une nouvelle conversation
+  /// Resets the conversation by clearing the current session ID.
   void resetSession() {
     currentSessionId = null;
-    log("[ChatbotService] Session réinitialisée.");
+    log("ChatbotService: Session reset.");
   }
 
-  /// Envoie un message au chatbot et retourne la réponse sous forme de flux (Stream).
+  /// Sends a message and returns an asynchronous stream of response chunks.
+  ///
+  /// [message] The user's prompt.
+  /// [history] The preceding messages in the conversation for context.
   Stream<String> sendMessageStream({
     required String message,
     required List<ChatMessage> history,

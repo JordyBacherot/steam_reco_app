@@ -8,6 +8,7 @@ import 'package:front/features/recommendations/trend_map_modal.dart';
 import 'package:front/core/theme/app_theme.dart';
 import 'package:front/shared/widgets/status_views.dart';
 
+/// The hub for choosing between different types of game recommendation methods.
 class RecoPage extends StatefulWidget {
   const RecoPage({super.key});
 
@@ -15,6 +16,7 @@ class RecoPage extends StatefulWidget {
   State<RecoPage> createState() => _RecoPageState();
 }
 
+/// State for [RecoPage] managing the display of recommendation options.
 class _RecoPageState extends State<RecoPage> {
 
   /// Builds a clickable card for a recommendation type

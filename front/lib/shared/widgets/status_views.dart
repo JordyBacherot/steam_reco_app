@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:front/core/theme/app_theme.dart';
 
+/// A fullscreen widget used to indicate a background operation is in progress.
 class LoadingView extends StatelessWidget {
+  /// The message to display alongside the loading indicator.
   final String message;
 
   const LoadingView({
     super.key,
-    this.message = "Analyse en cours...",
+    this.message = "Analyzing...",
   });
 
   @override
@@ -27,8 +29,12 @@ class LoadingView extends StatelessWidget {
   }
 }
 
+/// A fullscreen widget used to display an error state with a retry option.
 class ErrorView extends StatelessWidget {
+  /// The error message to display.
   final String message;
+  
+  /// Callback function triggered when the user taps the 'Retry' button.
   final VoidCallback onRetry;
 
   const ErrorView({
@@ -55,7 +61,7 @@ class ErrorView extends StatelessWidget {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: onRetry,
-              child: const Text('Réessayer'),
+              child: const Text('Retry'),
             )
           ],
         ),

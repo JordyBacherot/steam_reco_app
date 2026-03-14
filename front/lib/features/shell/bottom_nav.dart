@@ -4,7 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
 import 'package:front/core/theme/app_theme.dart';
 
+/// A shell widget that wraps the main application pages with a persistent 
+/// bottom navigation bar.
 class NavigationWrapper extends StatelessWidget {
+  /// The navigation shell provided by GoRouter to manage branch navigation.
   final StatefulNavigationShell navigationShell;
 
   const NavigationWrapper({

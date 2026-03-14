@@ -6,7 +6,7 @@ import 'package:front/core/theme/app_theme.dart';
 import 'package:front/shared/widgets/app_text_field.dart';
 import 'package:front/features/auth/widgets/profile_picture_picker.dart';
 
-/// The SignUpPage allows users to create a new account.
+/// The registration page where new users can create an account.
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
@@ -14,6 +14,7 @@ class SignUpPage extends StatefulWidget {
   State<SignUpPage> createState() => _SignUpPageState();
 }
 
+/// State for [SignUpPage] managing account creation and profile setup.
 class _SignUpPageState extends State<SignUpPage> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();

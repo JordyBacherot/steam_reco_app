@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:front/core/theme/app_theme.dart';
 
+/// A card widget representing a specific game.
+///
+/// Displays the game's image, title, and a short description.
+/// Designed for use within scrollable lists or grids.
 class GameCard extends StatelessWidget {
+  /// The official title of the game.
   final String name;
+  
+  /// A brief summary or description of the game.
   final String description;
+  
+  /// The URL for the game's capsule image.
   final String? imageUrl;
+  
+  /// The unique identifier for the game.
   final int? gameId;
+  
+  /// Callback function triggered when the card is tapped.
   final VoidCallback onTap;
 
   const GameCard({

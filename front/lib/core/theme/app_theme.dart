@@ -1,65 +1,104 @@
 import 'package:flutter/material.dart';
 
+/// A centralized theme definition inspired by the Steam client's aesthetic.
+///
+/// Provides a consistent dark color palette, typography, and widget
+/// styling across the entire application.
 class AppTheme {
-  // Steam-inspired color palette
+  /// The foundational dark blue/black background color.
+  static const Color darkBlue = Color(0xFF171d24);
+  
+  /// A deeper dark blue used for backgrounds and navigation bars.
+  static const Color darkerBlue = Color(0xFF0d121a);
+  
+  /// A lighter blue-gray used for secondary surfaces and containers.
+  static const Color lightBlue = Color(0xFF1b2838);
+  
+  /// The primary brand color used for call-to-action buttons and accents.
   static const Color primaryBlue = Color(0xFF66c0f4);
-  static const Color darkBlue = Color(0xFF1b2838);
-  static const Color darkerBlue = Color(0xFF171a21);
-  static const Color steamBlack = Color(0xFF0b0e11);
-  static const Color cardGrey = Color(0xFF2A475E); // Softer blue-grey for cards
-  static const Color greyText = Color(0xFF8f98a0);
-  static const Color lightGreyText = Color(0xFFc7d5e0);
+  
+  /// An alias for primaryBlue for compatibility.
+  static const Color accentBlue = primaryBlue;
 
+  /// A distinctive blue-green accent color.
+  static const Color blueGreen = Color(0xFF4c6c8c);
+  
+  /// Pure white used for high-contrast text.
+  static const Color textWhite = Color(0xFFFFFFFF);
+  
+  /// Standard grey color used for primary text descriptions.
+  static const Color greyText = Color(0xFFb8bcbf);
+  
+  /// Lighter grey for less emphasized text.
+  static const Color lightGreyText = Color(0xFF8f98a0);
+
+  /// Color for card backgrounds.
+  static const Color cardGrey = Color(0xFF1b2838);
+
+  /// Generates the application's overall [ThemeData].
+  static ThemeData get theme => darkTheme;
+
+  /// Alias for theme to match codebase usage.
   static ThemeData get darkTheme {
     return ThemeData(
-      useMaterial3: true,
       brightness: Brightness.dark,
-      primaryColor: primaryBlue,
       scaffoldBackgroundColor: darkBlue,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: darkerBlue,
-        elevation: 0,
-        centerTitle: false,
-        titleTextStyle: TextStyle(
-          color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-        ),
-        iconTheme: IconThemeData(color: Colors.white, size: 24),
-      ),
+      primaryColor: primaryBlue,
       colorScheme: const ColorScheme.dark(
         primary: primaryBlue,
-        secondary: primaryBlue,
-        surface: darkerBlue,
+        secondary: blueGreen,
+        surface: lightBlue,
         background: darkBlue,
       ),
+      
+      // Configuration for text styles across the app.
       textTheme: const TextTheme(
-        titleLarge: TextStyle(
-          color: Colors.white,
+        headlineMedium: TextStyle(
+          color: textWhite,
           fontWeight: FontWeight.bold,
+          fontSize: 24,
         ),
-        bodyLarge: TextStyle(color: lightGreyText),
-        bodyMedium: TextStyle(color: greyText),
+        titleLarge: TextStyle(
+          color: textWhite,
+          fontWeight: FontWeight.w600,
+          fontSize: 20,
+        ),
+        bodyLarge: TextStyle(
+          color: textWhite,
+          fontSize: 16,
+        ),
+        bodyMedium: TextStyle(
+          color: greyText,
+          fontSize: 14,
+        ),
       ),
+
+      // Consistent button styling.
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryBlue,
-          foregroundColor: Colors.white,
-          elevation: 2,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          foregroundColor: darkBlue,
+          textStyle: const TextStyle(fontWeight: FontWeight.bold),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(4),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
+        ),
+      ),
+
+      // Configuration for text input fields.
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: const Color(0xFF2a3f5a),
+        hintStyle: const TextStyle(color: greyText),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(4),
+          borderSide: BorderSide.none,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: primaryBlue,
-          side: const BorderSide(color: primaryBlue, width: 1.5),
+          foregroundColor: accentBlue,
+          side: const BorderSide(color: accentBlue, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),

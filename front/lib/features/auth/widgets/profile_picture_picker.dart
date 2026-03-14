@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:front/core/theme/app_theme.dart';
 
-/// A simple widget for selecting/editing a profile picture.
+/// A customizable widget for selecting and displaying a profile picture.
 class ProfilePicturePicker extends StatelessWidget {
+  /// The URL of the currently selected profile image.
   final String? imageUrl;
+  
+  /// Callback triggered when the user taps to edit the picture.
   final VoidCallback onTap;
 
   const ProfilePicturePicker({

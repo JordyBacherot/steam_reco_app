@@ -128,10 +128,11 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Internal helper to manually trigger a token refresh (used during init)
+  /// Triggers a manual token refresh, typically during app initialization.
   Future<bool> _attemptTokenRefresh(String refreshToken) async {
     try {
-      // We use a fresh Dio instance to avoid interceptor side-effects during boot
+      log('AuthService: Requesting token refresh...');
+      // Use a dedicated Dio instance to avoid interceptor side-effects during boot.
       final baseUrl = _apiClient.dio.options.baseUrl;
       final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
       
@@ -141,12 +142,9 @@ class AuthService extends ChangeNotifier {
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        final newToken = data['token'];
-        final newRefreshToken = data['refreshToken'];
-
-        await _secureStorage.writeToken(newToken);
-        if (newRefreshToken != null) {
-          await _secureStorage.writeRefreshToken(newRefreshToken);
+        await _secureStorage.writeToken(data['token']);
+        if (data['refreshToken'] != null) {
+          await _secureStorage.writeRefreshToken(data['refreshToken']);
         }
         return true;
       }
@@ -156,76 +154,76 @@ class AuthService extends ChangeNotifier {
     return false;
   }
 
-  /// Logs the user in with their email and password
+  /// Attempts to sign in with [email] and [password].
+  ///
+  /// Persists the returned tokens and fetches the user's profile on success.
   Future<bool> signIn(String email, String password) async {
     try {
-      final response = await _apiClient.dio.post('/auth/signin', data: {
+      final response = await _apiClient.dio.post('/auth/login', data: {
         'email': email,
         'password': password,
       });
 
-      if (response.statusCode == 200) {
-         final data = response.data['data'];
-         final token = data['token'];
-         final refreshToken = data['refreshToken'];
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'];
+        final token = data['token'];
+        final refreshToken = data['refreshToken'];
 
-          await _secureStorage.writeToken(token);
-          await _secureStorage.writeRefreshToken(refreshToken);
+        await _secureStorage.writeToken(token);
+        await _secureStorage.writeRefreshToken(refreshToken);
 
-          _updateCurrentUser(data);
-          
-          // Fetch steam user details explicitly here to populate steam_id
-          final int? userId = _currentUser?.id;
-          if (userId != null) {
-            await _fetchSteamUser(userId);
-          }
-          
-          _isAuthenticated = true;
-          notifyListeners();
-         
-         // Fetch games in background
-         fetchUserGamesCount();
-         return true;
+        _updateCurrentUser(data);
+        
+        // Fetch steam user details explicitly here to populate steam_id.
+        final int? userId = _currentUser?.id;
+        if (userId != null) {
+          await _fetchSteamUser(userId);
+        }
+        
+        _isAuthenticated = true;
+        notifyListeners();
+        
+        // Fetch user games count in the background.
+        fetchUserGamesCount();
+        return true;
       }
       return false;
     } on DioException catch (e) {
-      log('Sign-in failed: ${e.response?.data}');
+      log('AuthService: Sign-in failed: ${e.response?.data}');
       return false;
     } catch (e) {
-      log('Unexpected sign-in error: $e');
+      log('AuthService: Unexpected sign-in error: $e');
       return false;
     }
   }
 
-  /// Registers a new user
+  /// Registers a new user account with [username], [email], and [password].
   Future<bool> signUp(String username, String email, String password) async {
     try {
-      final response = await _apiClient.dio.post('/auth/signup', data: {
+      final response = await _apiClient.dio.post('/auth/register', data: {
         'username': username,
         'email': email,
         'password': password,
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-         // Auto sign-in after successful registration
+         // Automatically sign in after successful registration.
          return await signIn(email, password);
       }
       return false;
     } on DioException catch (e) {
-      log('Sign-up failed: ${e.response?.data}');
+      log('AuthService: Sign-up failed: ${e.response?.data}');
       return false;
     } catch (e) {
-      log('Unexpected sign-up error: $e');
+      log('AuthService: Unexpected sign-up error: $e');
       return false;
     }
   }
 
-  /// Logs the user out
+  /// Logs the user out by clearing local tokens and resetting state.
   Future<void> logout() async {
-    // Delete tokens from secure storage
+    log('AuthService: Logging out...');
     await _secureStorage.deleteTokens();
-    
-    // Clear state
     _isAuthenticated = false;
     _currentUser = null;
     notifyListeners();

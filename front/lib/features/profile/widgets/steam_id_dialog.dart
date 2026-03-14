@@ -3,7 +3,9 @@ import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
 import 'package:front/core/theme/app_theme.dart';
 
+/// A dialog that allows users to update their Steam 64 ID.
 class SteamIdDialog extends StatefulWidget {
+  /// The current Steam ID to show in the input field initially.
   final String initialSteamId;
 
   const SteamIdDialog({
@@ -11,6 +13,7 @@ class SteamIdDialog extends StatefulWidget {
     required this.initialSteamId,
   });
 
+  /// Static helper to display the dialog.
   static Future<void> show(BuildContext context, String initialSteamId) {
     return showDialog(
       context: context,
@@ -22,6 +25,7 @@ class SteamIdDialog extends StatefulWidget {
   State<SteamIdDialog> createState() => _SteamIdDialogState();
 }
 
+/// State for [SteamIdDialog] managing the text input and update request.
 class _SteamIdDialogState extends State<SteamIdDialog> {
   late final TextEditingController _controller;
 

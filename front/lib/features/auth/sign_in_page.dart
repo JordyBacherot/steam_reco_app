@@ -5,7 +5,7 @@ import 'package:front/services/auth_service.dart';
 import 'package:front/core/theme/app_theme.dart';
 import 'package:front/shared/widgets/app_text_field.dart';
 
-/// The SignInPage allows users to log into the application.
+/// The login page allowing users to authenticate with their email and password.
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
 
@@ -13,6 +13,7 @@ class SignInPage extends StatefulWidget {
   State<SignInPage> createState() => _SignInPageState();
 }
 
+/// State for [SignInPage] managing form input and authentication flow.
 class _SignInPageState extends State<SignInPage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();

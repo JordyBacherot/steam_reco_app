@@ -224,7 +224,7 @@ String? _hitTestContinent(Offset localPos, Size size) {
   return null;
 }
 
-// Modal Widget pour afficher les jeux populaires par continent
+/// An interactive modal showing trending games on a world map.
 class TrendMapModal extends StatefulWidget {
   const TrendMapModal({super.key});
 
@@ -232,6 +232,7 @@ class TrendMapModal extends StatefulWidget {
   State<TrendMapModal> createState() => _TrendMapModalState();
 }
 
+/// State for [TrendMapModal] managing continent selection and trending data fetching.
 class _TrendMapModalState extends State<TrendMapModal> {
 
   String? _selectedContinent;

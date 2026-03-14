@@ -8,7 +8,9 @@ import 'package:front/shared/widgets/section_title.dart';
 import 'package:front/shared/widgets/status_views.dart';
 import 'package:go_router/go_router.dart';
 
+/// Displays a list of games suggested for a specific recommendation type.
 class RecoShowPage extends StatefulWidget {
+  /// The recommendation category (e.g., 'steam', 'manual').
   final String type;
 
   const RecoShowPage({super.key, required this.type});
@@ -17,6 +19,7 @@ class RecoShowPage extends StatefulWidget {
   State<RecoShowPage> createState() => _RecoShowPageState();
 }
 
+/// State for [RecoShowPage] responsible for fetching and displaying results.
 class _RecoShowPageState extends State<RecoShowPage> {
   bool _isLoading = true;
   String _errorMsg = '';

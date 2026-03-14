@@ -11,7 +11,7 @@ import 'package:front/shared/widgets/section_title.dart';
 import 'package:front/shared/widgets/status_views.dart';
 import 'package:front/features/profile/widgets/profile_header.dart';
 
-/// Page de profil de l'utilisateur connecté.
+/// The user's profile page showing their personal information and game library.
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
