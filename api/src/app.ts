@@ -38,7 +38,7 @@ app.use(
       // Si l'origine commence par localhost ou est ton domaine de prod
       if (
         origin && 
-        (origin.startsWith("http://localhost:") || origin === "https://steam-reco-app.jordy-bacherot.fr")
+        (origin.startsWith("http://localhost:") || origin.startsWith("http://127.0.0.1:") || origin === "https://steam-reco-app.jordy-bacherot.fr")
       ) {
         return origin; // On renvoie l'origine exacte au navigateur
       }
