@@ -36,7 +36,7 @@ Future<void> main() async {
         ChangeNotifierProvider<GameService>(
           create: (context) => GameService(apiClient),
         ),
-        Provider<RecommendationService>(
+        ChangeNotifierProvider<RecommendationService>(
           create: (context) => RecommendationService(apiClient)),
         Provider<ChatbotService>(create: (context) => ChatbotService(apiClient)),
       ],

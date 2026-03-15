@@ -24,7 +24,9 @@ class _RecoPageState extends State<RecoPage> {
     super.initState();
     final userId = context.read<AuthService>().currentUser?.id;
     if (userId != null) {
-      context.read<GameService>().getUserGames(userId);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<GameService>().getUserGames(userId);
+      });
     }
   }
 

@@ -9,13 +9,14 @@ class ChatbotService {
   final ApiClient _apiClient;
 
   ChatbotService(this._apiClient);
-  
-  /// Persistent session identifier for maintaining conversation context.
-  String? currentSessionId;
+
+  /// Private session identifier — use the getter to read it from outside.
+  String? _currentSessionId;
+  String? get currentSessionId => _currentSessionId;
 
   /// Resets the conversation by clearing the current session ID.
   void resetSession() {
-    currentSessionId = null;
+    _currentSessionId = null;
     log("ChatbotService: Session reset.");
   }
 
@@ -58,8 +59,8 @@ class ChatbotService {
         "history": history.map((m) => m.toJson()).toList(),
       };
 
-      if (currentSessionId != null) {
-        bodyData["session_id"] = currentSessionId;
+      if (_currentSessionId != null) {
+        bodyData["session_id"] = _currentSessionId;
       }
 
       final response = await _apiClient.dio.post(
@@ -78,15 +79,15 @@ class ChatbotService {
         return;
       }
 
-      // 3. Extraction du session_id des Headers de la réponse (Garde au cas où)
       if (response.headers.value('x-session-id') != null) {
-        currentSessionId = response.headers.value('x-session-id');
+        _currentSessionId = response.headers.value('x-session-id');
       }
 
       final ResponseBody stream = response.data;
       String buffer = "";
 
-      await for (final chunk in stream.stream.cast<List<int>>().transform(utf8.decoder)) {
+      await for (final chunk
+          in stream.stream.cast<List<int>>().transform(utf8.decoder)) {
         buffer += chunk;
 
         int newlineIndex;
@@ -100,7 +101,7 @@ class ChatbotService {
             final data = jsonDecode(line);
 
             if (data['session_id'] != null) {
-              currentSessionId = data['session_id'];
+              _currentSessionId = data['session_id'];
             }
 
             if (data['message'] != null) {
@@ -112,7 +113,6 @@ class ChatbotService {
               }
             }
           } catch (e) {
-            // Buffer management if JSON is incomplete
             buffer = line + '\n' + buffer;
             break;
           }
