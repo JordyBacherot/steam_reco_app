@@ -12,8 +12,16 @@ import 'package:flutter/material.dart';
 /// similar games, and manage user libraries.
 class GameService extends ChangeNotifier {
   final ApiClient _apiClient;
+  int _addedGamesCount = 0;
+  bool _isLoadingLibrary = false;
+  List<GameModelDetailed> _userGames = [];
+
+  bool get isLoadingLibrary => _isLoadingLibrary;
+  List<GameModelDetailed> get userGames => _userGames;
 
   GameService(this._apiClient);
+
+  int get addedGamesCount => _addedGamesCount;
 
   /// Searches the game database for matches to [query].
   ///
@@ -81,37 +89,18 @@ class GameService extends ChangeNotifier {
 
   /// Retrieves the list of games currently in a specific user's library.
   Future<List<GameModelDetailed>> getUserGames(int userId) async {
-    log('GameService: Fetching library for user $userId...');
     try {
       final response = await _apiClient.dio.get('/users/$userId/games');
-
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? [];
+        _addedGamesCount = data.length;
+        notifyListeners();
         return data.map((j) => GameModelDetailed.fromJson(j)).toList();
       }
     } catch (e) {
-      log('GameService: Failed to fetch user library: $e');
+      log('Failed to fetch user library: $e');
     }
     return [];
-  }
-
-  /// Retrieves the number of games in a specific user's library.
-  Future<int> getUserGamesCount(int userId) async {
-    log('GameService: Fetching library count for user $userId...');
-    try {
-      final response = await _apiClient.dio.get('/users/$userId/games/count');
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        if (data['success'] == true && data['data'] != null) {
-          notifyListeners();
-          return data['data']['count'] ?? 0;
-        }
-      }
-    } catch (e) {
-      log('GameService: Failed to fetch user library count: $e');
-    }
-    return 0;
   }
 
   /// Adds a game to the user's library with the specified [hoursPlayed].
