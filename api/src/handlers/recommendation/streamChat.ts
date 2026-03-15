@@ -133,16 +133,31 @@ N'utilise JAMAIS de balises HTML (comme <br>, <b>, <i>). Fais de vrais retours �
         // Sauvegarde de l'historique une fois le stream terminé
         if (userId && fullResponse.trim().length > 0) {
           try {
-             const chatRepo = AppDataSource.getRepository(ChatbotRecommendation);
-             const chatReco = new ChatbotRecommendation();
-             chatReco.id_user = userId;
-             chatReco.session_id = sessionId;
-             chatReco.response = fullResponse;
-             await chatRepo.save(chatReco);
-             console.log(`[DB] Saved ChatbotRecommendation for user ${userId}, session ${sessionId}`);
+            const chatRepo = AppDataSource.getRepository(ChatbotRecommendation);
+
+            // 1. Sauvegarde du message de l'utilisateur (si présent)
+            if (message && message.trim().length > 0) {
+              const userEntry = new ChatbotRecommendation();
+              userEntry.id_user = userId;
+              userEntry.session_id = sessionId;
+              userEntry.response = message;
+              userEntry.role = "user"; // On précise le rôle
+              await chatRepo.save(userEntry);
+            }
+
+            // 2. Sauvegarde de la réponse de l'assistant
+            const aiEntry = new ChatbotRecommendation();
+            aiEntry.id_user = userId;
+            aiEntry.session_id = sessionId;
+            aiEntry.response = fullResponse;
+            aiEntry.role = "assistant"; // On précise le rôle
+            await chatRepo.save(aiEntry);
+
+            console.log(`[DB] Saved User prompt and AI Response for session ${sessionId}`);
           } catch (dbError) {
-             console.error("Failed to save ChatbotRecommendation:", dbError);
+            console.error("Failed to save Chatbot history:", dbError);
           }
+
         }
       }
     });

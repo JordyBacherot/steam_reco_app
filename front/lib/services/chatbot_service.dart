@@ -19,6 +19,31 @@ class ChatbotService {
     log("ChatbotService: Session reset.");
   }
 
+  /// Fetches the last chatbot conversation from the server.
+  ///
+  /// Returns a map with `session_id` and `messages` (list of response maps),
+  /// or `null` if no conversation history exists.
+  Future<Map<String, dynamic>?> fetchLastConversation() async {
+    try {
+      final response = await _apiClient.dio.get(
+        "/recommendations/history/chat",
+        queryParameters: {"limit": 1},
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final List history = data['history_chat'] ?? [];
+        if (history.isNotEmpty) {
+          return history.first as Map<String, dynamic>;
+        }
+      }
+      return null;
+    } catch (e) {
+      log("Error fetching last conversation: $e");
+      return null;
+    }
+  }
+
   /// Sends a message and returns an asynchronous stream of response chunks.
   ///
   /// [message] The user's prompt.

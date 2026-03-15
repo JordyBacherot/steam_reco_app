@@ -26,6 +26,9 @@ export class ChatbotRecommendation {
   @Column("text")
   response!: string;
 
+  @Column("text")
+  role!: string;
+
   @CreateDateColumn()
   created_at!: Date;
 }

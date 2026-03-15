@@ -50,7 +50,7 @@ export const recommendationService = {
   },
 
   /**
-   * Cherche les jeux similaires (Nearest Neighbors) à partir d'un nom ou d'un ID.
+   * Cherche les jeux joués par les autres joueurs (Nearest Neighbors) à partir d'un nom ou d'un ID.
    */
   async getNearestGames(query: string, limit: number = 5) {
     const response = await recoClient.get(`/nearest_games/${query}`, {

@@ -29,25 +29,25 @@ class SimilarGamesList extends StatelessWidget {
       children: [
         const SizedBox(height: 32),
         Text(
-          "Jeux Similaires :",
+          "Jeux joués par les autres joueurs :",
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),
         ...similarGames.map((game) => Padding(
-          padding: const EdgeInsets.only(bottom: 12.0),
-          child: InkWell(
-            onTap: () => _navigateToSimilarGame(context, game.appid),
-            child: Text(
-              "→ ${game.name} (${(game.score * 100).toStringAsFixed(0)}%)",
-              style: const TextStyle(
-                fontSize: 16,
-                color: AppTheme.primaryBlue,
-                decoration: TextDecoration.underline,
-                decorationColor: AppTheme.primaryBlue,
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: InkWell(
+                onTap: () => _navigateToSimilarGame(context, game.appid),
+                child: Text(
+                  "→ ${game.name} (${(game.score * 100).toStringAsFixed(0)}%)",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: AppTheme.primaryBlue,
+                    decoration: TextDecoration.underline,
+                    decorationColor: AppTheme.primaryBlue,
+                  ),
+                ),
               ),
-            ),
-          ),
-        )),
+            )),
         const SizedBox(height: 32),
       ],
     );

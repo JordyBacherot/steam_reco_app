@@ -14,25 +14,22 @@ export const getChatHistory = async (c: Context) => {
   try {
     const userId = c.get("userId");
     
-    // Si l'utilisateur n'est pas authentifié via le middleware, renvoyer une erreur 401
     if (!userId) {
       return c.json({ error: "Unauthorized" }, 401);
     }
 
-    // Récupérer la limite de "conversations" demandée, par défaut 1
     const limitParam = c.req.query("limit");
     const limit = limitParam ? parseInt(limitParam) : 1;
 
     const chatRepo = AppDataSource.getRepository(ChatbotRecommendation);
 
-    // 1. Trouver les X derniers "session_id" distincts triés par la date la plus récente
-    // On utilise le QueryBuilder car TypeORM ne permet pas de faire facilement un GROUP BY avec un ORDER BY MAX() direct avec le formalisme `.find()`
+    // 1. Trouver les X derniers "session_id" distincts
     const recentSessionsQuery = await chatRepo
       .createQueryBuilder("chat")
       .select("chat.session_id", "session_id")
       .addSelect("MAX(chat.created_at)", "max_date")
       .where("chat.id_user = :userId", { userId })
-      .andWhere("chat.session_id IS NOT NULL") // S'assurer qu'on ne prend que des conversations avec session
+      .andWhere("chat.session_id IS NOT NULL")
       .groupBy("chat.session_id")
       .orderBy("max_date", "DESC")
       .limit(limit)
@@ -40,7 +37,6 @@ export const getChatHistory = async (c: Context) => {
 
     const sessionIds = recentSessionsQuery.map((s) => s.session_id);
 
-    // Si aucune session n'est trouvée pour cet utilisateur, on renvoie un tableau vide
     if (sessionIds.length === 0) {
       return c.json({
         history_chat: [],
@@ -49,38 +45,44 @@ export const getChatHistory = async (c: Context) => {
       });
     }
 
-    // 2. Récupérer TOUS les messages appartenant à ces sessions
-    // On les trie par 'created_at' ASC afin de restituer le sens de la discussion
+    // 2. Récupérer TOUS les messages (User + Assistant) pour ces sessions
     const messages = await chatRepo
       .createQueryBuilder("chat")
-      .leftJoinAndSelect("chat.user", "user") // Si vous avez besoin de peupler la relation
+      // On s'assure de sélectionner le champ 'role' (automatique avec getMany si défini dans l'entité)
       .where("chat.session_id IN (:...sessionIds)", { sessionIds })
-      .orderBy("chat.created_at", "ASC")
+      .orderBy("chat.created_at", "ASC") 
       .getMany();
 
-    // 3. Regrouper les messages par session pour faciliter la lecture côté client
-    // Résultat : { "session-id-1": [ message1, message2... ], "session-id-2": [ ... ] }
-    const groupedBySession: Record<string, ChatbotRecommendation[]> = {};
+    // 3. Regrouper par session
+    const groupedBySession: Record<string, any[]> = {};
+    
     for (const msg of messages) {
       if (msg.session_id) {
         if (!groupedBySession[msg.session_id]) {
           groupedBySession[msg.session_id] = [];
         }
-        groupedBySession[msg.session_id].push(msg);
+        
+        // On construit un objet propre pour le front
+        groupedBySession[msg.session_id].push({
+          id: msg.id_chatbot_reco,
+          role: msg.role, // "user" ou "assistant"
+          content: msg.response,
+          created_at: msg.created_at
+        });
       }
     }
 
-    // Transforme l'objet en un tableau de conversations plus facile à itérer
+    // Mise en forme finale
     const conversationsArray = Object.keys(groupedBySession).map(sessionId => ({
       session_id: sessionId,
       messages: groupedBySession[sessionId]
     }));
 
-    // Re-trier le tableau final de conversations de la plus récente à la plus ancienne
+    // Tri final des conversations par date du dernier message
     conversationsArray.sort((a, b) => {
-      const lastMsgA = a.messages[a.messages.length - 1];
-      const lastMsgB = b.messages[b.messages.length - 1];
-      return lastMsgB.created_at.getTime() - lastMsgA.created_at.getTime();
+      const lastA = new Date(a.messages[a.messages.length - 1].created_at).getTime();
+      const lastB = new Date(b.messages[b.messages.length - 1].created_at).getTime();
+      return lastB - lastA;
     });
 
     return c.json({
