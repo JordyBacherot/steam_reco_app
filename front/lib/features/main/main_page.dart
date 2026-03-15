@@ -3,48 +3,34 @@ import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
 import 'package:front/features/main/widgets/profile_card.dart';
 import 'package:front/features/main/widgets/recommendation_list.dart';
-import 'package:front/models/recommendation_model.dart';
-import 'package:front/models/game_model.dart';
 import 'package:front/services/chatbot_service.dart';
+import 'package:front/services/recommendation_service.dart';
 import 'package:front/core/theme/app_theme.dart';
 import 'package:front/shared/widgets/app_title.dart';
 
-class MainPage extends StatelessWidget {
+class MainPage extends StatefulWidget {
   const MainPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Watch the user state for reactive updates
-    final currentUser = context.watch<AuthService>().currentUser;
-    // Access service without listening (best for one-off calls like fetchLastConversation)
-    final chatbotService = Provider.of<ChatbotService>(context, listen: false);
+  State<MainPage> createState() => _MainPageState();
+}
 
-    final fakeRecommendations = [
-      RecommendationModel(
-        type: 'IA',
-        createdAt: DateTime(2026, 3, 12, 10, 30),
-        games: const [
-          GameModel(
-            id: '1091500',
-            title: 'Cyberpunk 2077',
-            imageUrl:
-                'https://cdn.akamai.steamstatic.com/steam/apps/1091500/capsule_231x87.jpg',
-          ),
-          GameModel(
-            id: '367520',
-            title: 'Hollow Knight',
-            imageUrl:
-                'https://cdn.akamai.steamstatic.com/steam/apps/367520/capsule_231x87.jpg',
-          ),
-          GameModel(
-            id: '413150',
-            title: 'Stardew Valley',
-            imageUrl:
-                'https://cdn.akamai.steamstatic.com/steam/apps/413150/capsule_231x87.jpg',
-          ),
-        ],
-      ),
-    ];
+class _MainPageState extends State<MainPage> {
+  late final RecommendationService _recoService;
+
+  @override
+  void initState() {
+    super.initState();
+    _recoService = context.read<RecommendationService>();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _recoService.fetchAiHistory();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = context.watch<AuthService>().currentUser;
+    final chatbotService = context.read<ChatbotService>();
 
     return Scaffold(
       backgroundColor: AppTheme.darkBlue,
@@ -58,17 +44,27 @@ class MainPage extends StatelessWidget {
 
           // 1. User Profile Header
           ProfileCard(
-            avatarUrl: currentUser?.profilePicture ??
-                'https://picsum.photos/id/237/200/300',
             username: currentUser?.username ?? 'User',
             level: currentUser?.level ?? 1,
-            lastConnection: 'Connected',
+            lastConnection: 'Connecté',
           ),
 
           const SizedBox(height: 24),
 
-          // 2. Recommendations Section
-          RecommendationList(recommendations: fakeRecommendations),
+          // 2. AI Recommendation History
+          Consumer<RecommendationService>(
+            builder: (context, recoService, _) {
+              final displayed_recommendations = recoService.recommendations.length > 3
+                  ? recoService.recommendations.sublist(0, 3)
+                  : recoService.recommendations;
+              if (recoService.isLoadingHistory) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return RecommendationList(
+                recommendations: displayed_recommendations,
+              );
+            },
+          ),
 
           const SizedBox(height: 24),
 
@@ -119,8 +115,7 @@ class MainPage extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled:
-          true, // Allows the modal to take up more space if needed
+      isScrollControlled: true,
       backgroundColor: AppTheme.cardGrey,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),

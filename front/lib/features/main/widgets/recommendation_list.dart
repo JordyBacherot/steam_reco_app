@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:front/core/theme/app_theme.dart';
-import 'package:front/shared/widgets/game_card.dart';
 import 'package:front/shared/widgets/section_title.dart';
 import 'package:front/shared/widgets/empty_state.dart';
 import 'package:front/models/recommendation_model.dart';
+import 'package:front/features/main/widgets/recommendation_card.dart';
 
 /// Displays the list of past recommendation sessions.
 /// Shows an empty state with a CTA if there are no sessions yet.
@@ -18,10 +17,11 @@ class RecommendationList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: 'Recommandations récentes::'),
+        const SectionTitle(title: 'Recommandations récentes :'),
         if (recommendations.isEmpty)
           EmptyState(
             message: "Aucune recommandation pour le moment.",
@@ -35,12 +35,8 @@ class RecommendationList extends StatelessWidget {
             itemCount: recommendations.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
-              final reco = recommendations[index];
-              final firstGame = reco.games.isNotEmpty ? reco.games.first : null;
-              return GameCard(
-                name: "${reco.type} Recommandation",
-                description: "Session du ${reco.createdAt.day}/${reco.createdAt.month} à ${reco.createdAt.hour}:${reco.createdAt.minute}",
-                imageUrl: firstGame?.imageUrl,
+              return RecommendationCard(
+                recommendation: recommendations[index],
                 onTap: () => context.go('/reco'),
               );
             },

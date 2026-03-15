@@ -31,9 +31,7 @@ class ProfilePage extends StatelessWidget {
                 ProfileHeader(
                   username: currentUser.username,
                   email: currentUser.email,
-                  steamId: currentUser.steamId ?? 'Non lié',
-                  avatarUrl: currentUser.profilePicture ??
-                      'https://picsum.photos/id/237/200/300',
+                  steamId: currentUser.steamId ?? 'Non lié'
                 ),
 
               const SizedBox(height: 8),

@@ -1,50 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:front/core/network/api_client.dart';
+import 'package:front/models/recommendation_model.dart';
+import 'package:front/models/game_model.dart';
 import 'dart:developer';
-
-// ---------------------------------------------------------------------------
-// Model
-// ---------------------------------------------------------------------------
-
-/// Represents a single AI recommendation entry from the history endpoint.
-class AiRecommendationEntry {
-  final int userId;
-  final int gameId;
-  final double score;
-  final DateTime createdAt;
-  final String gameName;
-  final String gameDescription;
-  final String gameImageUrl;
-  final double meanReview;
-  final String studio;
-
-  AiRecommendationEntry({
-    required this.userId,
-    required this.gameId,
-    required this.score,
-    required this.createdAt,
-    required this.gameName,
-    required this.gameDescription,
-    required this.gameImageUrl,
-    required this.meanReview,
-    required this.studio,
-  });
-
-  factory AiRecommendationEntry.fromJson(Map<String, dynamic> json) {
-    final game = json['game'] as Map<String, dynamic>? ?? {};
-    return AiRecommendationEntry(
-      userId: json['id_user'] as int,
-      gameId: json['id_game'] as int,
-      score: (json['score'] as num).toDouble(),
-      createdAt: DateTime.parse(json['created_at'] as String),
-      gameName: game['name'] as String? ?? '',
-      gameDescription: game['description'] as String? ?? '',
-      gameImageUrl: game['image_url'] as String? ?? '',
-      meanReview: double.tryParse(game['mean_review']?.toString() ?? '') ?? 0.0,
-      studio: game['studio'] as String? ?? '',
-    );
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Service
@@ -53,7 +11,7 @@ class AiRecommendationEntry {
 /// Service providing high-level game recommendation flows.
 ///
 /// Extends [ChangeNotifier] so that UI widgets can reactively rebuild
-/// when [aiHistory] or [isLoadingHistory] changes.
+/// when [recommendations] or [isLoadingHistory] changes.
 class RecommendationService extends ChangeNotifier {
   final ApiClient _apiClient;
 
@@ -61,38 +19,54 @@ class RecommendationService extends ChangeNotifier {
 
   // --- AI history state (reactive) -----------------------------------------
 
-  List<AiRecommendationEntry> _aiHistory = [];
+  List<RecommendationModel> _recommendations = [];
   bool _isLoadingHistory = false;
 
-  List<AiRecommendationEntry> get aiHistory => _aiHistory;
+  List<RecommendationModel> get recommendations => _recommendations;
   bool get isLoadingHistory => _isLoadingHistory;
 
   // ---------------------------------------------------------------------------
   // AI History — updates state and notifies listeners
   // ---------------------------------------------------------------------------
 
-  /// Fetches the AI recommendation history and updates [aiHistory].
+  /// Fetches the AI recommendation history and updates [recommendations].
   ///
+  /// All entries returned by the endpoint are grouped into a single
+  /// [RecommendationModel] of type 'IA', matching the batch nature of the API.
   /// [limit] controls how many entries are returned (default 10).
   /// Always resets [isLoadingHistory] whether the call succeeds or fails.
-  Future<void> fetchAiHistory({int limit = 10}) async {
+  Future<void> fetchAiHistory() async {
     _isLoadingHistory = true;
     notifyListeners();
 
     try {
-      log('RecommendationService: Fetching AI history (limit: $limit)...');
-      final response = await _apiClient.dio.get(
-        '/recommendations/history/ai',
-        queryParameters: {'limit': limit},
-      );
+      log('RecommendationService: Fetching AI history');
+      final response = await _apiClient.dio.get('/recommendations/history/ai');
 
       if (response.statusCode == 200 && response.data != null) {
-        final List<dynamic> raw =
-            response.data['history_ai'] as List<dynamic>? ?? [];
-        _aiHistory = raw
-            .map((e) => AiRecommendationEntry.fromJson(e as Map<String, dynamic>))
-            .toList();
-        log('RecommendationService: Loaded ${_aiHistory.length} AI history entries.');
+        final List<dynamic> raw = response.data['history_ai'] as List<dynamic>? ?? [];
+
+        if (raw.isNotEmpty) {
+          _recommendations = raw.map((e) {
+            final json = e as Map<String, dynamic>;
+            final game = json['game'] as Map<String, dynamic>? ?? {};
+            return RecommendationModel(
+              type: 'IA',
+              createdAt: DateTime.parse(json['created_at'] as String),
+              games: [
+                GameModel(
+                  id: (json['id_game'] as int).toString(),
+                  title: game['name'] as String? ?? '',
+                  imageUrl: game['image_url'] as String? ?? '',
+                ),
+              ],
+            );
+          }).toList();
+          log('RecommendationService: Built ${_recommendations.length} RecommendationModels.');
+        } else {
+          _recommendations = [];
+          log('RecommendationService: No AI history entries found.');
+        }
       }
     } catch (e) {
       log('RecommendationService: Failed to fetch AI history: $e');
@@ -165,7 +139,6 @@ class RecommendationService extends ChangeNotifier {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  /// Identifies and parses recommendation data from various response formats.
   List<dynamic> _parseRecommendations(dynamic data) {
     if (data == null) return [];
 

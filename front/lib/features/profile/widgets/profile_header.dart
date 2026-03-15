@@ -7,14 +7,12 @@ class ProfileHeader extends StatelessWidget {
   final String username;
   final String email;
   final String steamId;
-  final String avatarUrl;
 
   const ProfileHeader({
     super.key,
     required this.username,
     required this.email,
     required this.steamId,
-    required this.avatarUrl,
   });
 
   @override
@@ -22,9 +20,9 @@ class ProfileHeader extends StatelessWidget {
     return Column(
       children: [
         const SizedBox(height: 32),
-        CircleAvatar(
+        const CircleAvatar(
           radius: 60,
-          backgroundImage: NetworkImage(avatarUrl),
+          backgroundImage: AssetImage('assets/images/default_avatar.jpg'),
         ),
         const SizedBox(height: 24),
         Text(
@@ -45,11 +43,14 @@ class ProfileHeader extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'SteamID: $steamId',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.greyText.withOpacity(0.7),
-                  ),
+            Flexible(
+              child: Text(
+                'SteamID: $steamId',
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.greyText.withOpacity(0.7),
+                    ),
+              ),
             ),
             const SizedBox(width: 16),
             OutlinedButton.icon(
