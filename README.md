@@ -90,12 +90,13 @@ Une fois les conteneurs démarrés (vérifiez avec `docker compose ps`), vous po
 
 ## 🛠️ Développement Local (Hybride)
 
-Bien que l'utilisation complète de Docker soit recommandée, vous pouvez lancer les APIs manuellement sur votre machine (avec `bun` ou `poetry`) tout en gardant la Base de Données dans Docker.
+Bien que l'utilisation complète de Docker soit recommandée, vous pouvez lancer les APIs et le front manuellement sur votre machine (avec `bun`, `poetry` et `flutter`) tout en gardant la Base de Données dans Docker.
 
 ### 1. Pré-requis
 
 - **Node.js / Bun** (pour l'API Hono)
 - **Python 3.10+ & Poetry** (pour l'API Reco)
+- **Flutter SDK** (pour le front)
 - **Docker** (pour la BDD en arrière-plan)
 
 ### 2. Configuration BDD (Docker Uniquement)

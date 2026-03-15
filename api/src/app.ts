@@ -34,13 +34,20 @@ const app = new Hono();
 app.use(
   "*",
   cors({
-    origin: [
-      "https://steam-reco-app.jordy-bacherot.fr", // L'URL de votre Front en Prod
-      "http://localhost:5173", // L'URL de votre Front en Dev local
-    ],
+    origin: (origin) => {
+      // Si l'origine commence par localhost ou est ton domaine de prod
+      if (
+        origin && 
+        (origin.startsWith("http://localhost:") || origin === "https://steam-reco-app.jordy-bacherot.fr")
+      ) {
+        return origin; // On renvoie l'origine exacte au navigateur
+      }
+      // Fallback de sécurité par défaut
+      return "https://steam-reco-app.jordy-bacherot.fr"; 
+    },
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization", "Accept"],
-    exposeHeaders: ["X-Session-ID"], // Pousser le session_id au frontend !
+    exposeHeaders: ["X-Session-ID"], // Pousser le session_id au frontend
     credentials: true,
   }),
 );
