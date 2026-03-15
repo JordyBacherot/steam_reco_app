@@ -168,8 +168,7 @@ class GameService extends ChangeNotifier {
       String continent) async {
     log('GameService: Fetching trending games for $continent...');
     try {
-      final response =
-          await _apiClient.dio.get('/games/trending/$continent');
+      final response = await _apiClient.dio.get('/games/trending/$continent');
 
       if (response.statusCode == 200) {
         final List data = response.data['data'] ?? [];
@@ -202,7 +201,7 @@ class GameService extends ChangeNotifier {
 
   /// Posts a new review for a game.
   Future<bool> postReview({
-    required String gameId,
+    required int gameId,
     required int userId,
     required String text,
   }) async {

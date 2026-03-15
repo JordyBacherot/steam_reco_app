@@ -34,7 +34,8 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
     try {
       final gameService = context.read<GameService>();
 
-      final reviews = await gameService.getReviewsForGame(widget.gameId.toString());
+      final reviews =
+          await gameService.getReviewsForGame(widget.gameId.toString());
 
       if (mounted) {
         setState(() {
@@ -54,7 +55,8 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
 
     if (text.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Votre avis est trop court (minimum 2 caractères).')),
+        const SnackBar(
+            content: Text('Votre avis est trop court (minimum 2 caractères).')),
       );
       return;
     }
@@ -64,7 +66,8 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
 
     if (userId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vous devez être connecté pour poster un avis.')),
+        const SnackBar(
+            content: Text('Vous devez être connecté pour poster un avis.')),
       );
       return;
     }
@@ -74,7 +77,7 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
     try {
       final gameService = context.read<GameService>();
       final success = await gameService.postReview(
-        gameId: widget.gameId.toString(),
+        gameId: widget.gameId,
         userId: userId,
         text: text,
       );
@@ -113,7 +116,7 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),
-        
+
         // Review Input field
         TextField(
           controller: _reviewController,
@@ -138,11 +141,16 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
               return ElevatedButton(
                 onPressed: (_isPosting || !canPost) ? null : _submitReview,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: canPost ? AppTheme.primaryBlue : Colors.grey[700],
+                  backgroundColor:
+                      canPost ? AppTheme.primaryBlue : Colors.grey[700],
                   foregroundColor: Colors.white,
                 ),
-                child: _isPosting 
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                child: _isPosting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
                     : const Text("Poster l'avis"),
               );
             },
@@ -157,7 +165,8 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
             padding: EdgeInsets.symmetric(vertical: 16),
             child: Text(
               "Aucun avis pour le moment. Soyez le premier à en poster un !",
-              style: TextStyle(fontStyle: FontStyle.italic, color: Colors.white54),
+              style:
+                  TextStyle(fontStyle: FontStyle.italic, color: Colors.white54),
             ),
           )
         else
@@ -165,7 +174,8 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: _reviews.length,
-            separatorBuilder: (context, index) => const Divider(color: Colors.white10),
+            separatorBuilder: (context, index) =>
+                const Divider(color: Colors.white10),
             itemBuilder: (context, index) {
               final review = _reviews[index];
               return Padding(
@@ -175,7 +185,9 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
                   children: [
                     Text(
                       review.username,
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryBlue),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryBlue),
                     ),
                     const SizedBox(height: 4),
                     Text(review.text),
