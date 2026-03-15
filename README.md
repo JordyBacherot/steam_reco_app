@@ -55,6 +55,8 @@ Copiez les fichiers d'exemple `.env.example` en `.env` dans les dossiers suivant
 
 > **Note** : Les fichiers `.env.example` sont pré-remplis avec des valeurs par défaut fonctionnant pour l'environnement Docker local, il faut les copier en `.env` et les compléter. Les seuls fichiers à réellement compléter sont `api_recommendation/.env`, il faut renseigner la clé STEAM_API_KEY et `api/.env`, il faut renseigner GROQ_API_KEY.
 
+> **Attention** : Dans le cas de lancement du projet en ligne de commande dans `api/.env` il faut modifier : **API_RECOMMENDATION=http://api_recommendation:8000** en **API_RECOMMENDATION=http://localhost:8000**
+
 ### 3. Lancement de l'Application
 
 À la racine du projet, lancez la commande suivante pour construire et démarrer tous les conteneurs :
