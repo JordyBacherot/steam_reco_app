@@ -33,7 +33,9 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
 
     try {
       final gameService = context.read<GameService>();
-      final reviews = await gameService.getReviewsForGame(widget.gameId);
+
+      final reviews = await gameService.getReviewsForGame(widget.gameId.toString());
+
       if (mounted) {
         setState(() {
           _reviews = reviews;
@@ -72,7 +74,7 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
     try {
       final gameService = context.read<GameService>();
       final success = await gameService.postReview(
-        gameId: widget.gameId,
+        gameId: widget.gameId.toString(),
         userId: userId,
         text: text,
       );
