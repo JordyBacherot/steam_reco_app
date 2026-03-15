@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:front/models/game_model.dart';
-import 'package:front/models/game_model_detailed.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
@@ -13,7 +12,6 @@ import 'package:front/shared/widgets/empty_state.dart';
 import 'package:front/shared/widgets/status_views.dart';
 
 /// Page where the user can search for games and add them to their library.
-/// This version fetches data from GameService using FutureBuilder for simplicity.
 class AddGamesPage extends StatefulWidget {
   const AddGamesPage({super.key});
 
@@ -26,12 +24,24 @@ class _AddGamesPageState extends State<AddGamesPage> {
   final TextEditingController _hoursController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    // Trigger the initial library load after the first frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = context.read<AuthService>().currentUser?.id;
+      if (userId != null) {
+        context.read<GameService>().getUserGames(userId);
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _hoursController.dispose();
     super.dispose();
   }
 
-  /// Adds the selected game to the user's library
+  /// Adds the selected game to the user's library, then refreshes the list.
   Future<void> _addGame() async {
     if (_selectedGame == null || _hoursController.text.isEmpty) return;
 
@@ -58,18 +68,20 @@ class _AddGamesPageState extends State<AddGamesPage> {
     try {
       final success = await gameService.addUserGame(
         userId: userId,
-        gameId: int.parse(_selectedGame!.id),
+        gameId: _selectedGame!.id,
         hours: hours,
         gameTitle: _selectedGame!.title,
         gameImageUrl: _selectedGame!.imageUrl,
       );
 
       if (success && mounted) {
-        // Clear selection after adding
+        // Clear local selection state.
         setState(() {
           _selectedGame = null;
           _hoursController.clear();
         });
+        // Refresh the library — Consumer will rebuild automatically.
+        await gameService.getUserGames(userId);
         messenger.showSnackBar(
           const SnackBar(content: Text("Jeu ajouté avec succès !")),
         );
@@ -84,7 +96,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
     }
   }
 
-  /// Deletes a game from the user's library
+  /// Deletes a game from the user's library, then refreshes the list.
   Future<void> _deleteGame(String gameId) async {
     final authService = context.read<AuthService>();
     final gameService = context.read<GameService>();
@@ -96,10 +108,11 @@ class _AddGamesPageState extends State<AddGamesPage> {
     try {
       final success = await gameService.deleteUserGame(userId, gameId);
       if (success && mounted) {
+        // Refresh the library — Consumer will rebuild automatically.
+        await gameService.getUserGames(userId);
         messenger.showSnackBar(
           const SnackBar(content: Text('Jeu retiré de la bibliothèque')),
         );
-        setState(() {}); // rebuild FutureBuilder
       }
     } catch (e) {
       debugPrint('Failed to delete game: $e');
@@ -108,8 +121,7 @@ class _AddGamesPageState extends State<AddGamesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authService = context.read<AuthService>();
-    final userId = authService.currentUser?.id;
+    final userId = context.read<AuthService>().currentUser?.id;
 
     if (userId == null) {
       return const Scaffold(
@@ -154,23 +166,14 @@ class _AddGamesPageState extends State<AddGamesPage> {
             const SizedBox(height: 8),
             const SectionTitle(title: 'Jeux ajoutés'),
 
-            // Fetch games from GameService
-            FutureBuilder<List<GameModelDetailed>>(
-              future: context.read<GameService>().getUserGames(userId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
+            // Reacts automatically when GameService notifies listeners.
+            Consumer<GameService>(
+              builder: (context, gameService, _) {
+                if (gameService.isLoadingLibrary) {
                   return const LoadingView(message: "Chargement de vos jeux...");
                 }
-                if (snapshot.hasError) {
-                  return ErrorView(
-                    message: "Erreur de chargement de la bibliothèque",
-                    onRetry: () => setState(() {}),
-                  );
-                }
 
-                final games = snapshot.data ?? [];
-
-                if (games.isEmpty) {
+                if (gameService.userGames.isEmpty) {
                   return const EmptyState(
                     message: "Aucun jeu ajouté pour le moment.",
                   );
@@ -179,11 +182,10 @@ class _AddGamesPageState extends State<AddGamesPage> {
                 return ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: games.length,
+                  itemCount: gameService.userGames.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
-                    final game = games[index];
-
+                    final game = gameService.userGames[index];
                     return AddedGameCard(
                       game: GameModel(
                         id: game.idGame.toString(),

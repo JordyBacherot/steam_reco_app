@@ -5,28 +5,34 @@ import 'package:front/models/review_model.dart';
 import 'dart:developer';
 import 'package:flutter/material.dart';
 
-
 /// Service responsible for all game-related HTTP requests.
-/// 
-/// Communicates with the backend API to retrieve game data, 
+///
+/// Communicates with the backend API to retrieve game data,
 /// similar games, and manage user libraries.
+///
+/// Extends [ChangeNotifier] so that UI widgets can reactively rebuild
+/// when the user's library ([userGames], [isLoadingLibrary]) changes.
 class GameService extends ChangeNotifier {
   final ApiClient _apiClient;
-  int _addedGamesCount = 0;
+
   bool _isLoadingLibrary = false;
   List<GameModelDetailed> _userGames = [];
 
   bool get isLoadingLibrary => _isLoadingLibrary;
   List<GameModelDetailed> get userGames => _userGames;
 
+  /// Derived from [_userGames] — no need for a separate counter.
+  int get addedGamesCount => _userGames.length;
+
   GameService(this._apiClient);
 
-  int get addedGamesCount => _addedGamesCount;
+  // ---------------------------------------------------------------------------
+  // Search & details — plain async methods, no state needed
+  // ---------------------------------------------------------------------------
 
   /// Searches the game database for matches to [query].
-  ///
-  /// Returns a list of [GameModelDetailed] instances.
-  Future<List<GameModelDetailed>> searchGames(String query, {int limit = 15}) async {
+  Future<List<GameModelDetailed>> searchGames(String query,
+      {int limit = 15}) async {
     log('GameService: Searching for "$query" with limit $limit...');
     try {
       final response = await _apiClient.dio.get(
@@ -40,15 +46,13 @@ class GameService extends ChangeNotifier {
           final List<dynamic> jsonList = data['data'];
           return jsonList.map((j) => GameModelDetailed.fromJson(j)).toList();
         }
-        return [];
       } else {
         log("[GameService] Error searching games: ${response.statusCode}");
-        return [];
       }
     } catch (e) {
       log("[GameService] Exception searching games: $e");
-      return [];
     }
+    return [];
   }
 
   /// Retrieves comprehensive metadata for a specific game by its [id].
@@ -70,12 +74,11 @@ class GameService extends ChangeNotifier {
   }
 
   /// Fetches a list of games similar to the one identified by [query].
-  ///
-  /// Similarity is determined by backend recommendation algorithms.
   Future<List<NearGameModel>> getNearestGames(String query) async {
     log('GameService: Fetching nearest games for "$query"...');
     try {
-      final response = await _apiClient.dio.get('/recommendations/nearest_games/$query');
+      final response =
+          await _apiClient.dio.get('/recommendations/nearest_games/$query');
 
       if (response.statusCode == 200) {
         final List data = response.data['nearest_games'] ?? [];
@@ -87,31 +90,43 @@ class GameService extends ChangeNotifier {
     return [];
   }
 
-  /// Retrieves the list of games currently in a specific user's library.
-  Future<List<GameModelDetailed>> getUserGames(int userId) async {
+  // ---------------------------------------------------------------------------
+  // User library — updates state and notifies listeners
+  // ---------------------------------------------------------------------------
+
+  /// Retrieves the list of games in the user's library and updates [userGames].
+  ///
+  /// Always resets [isLoadingLibrary] whether the call succeeds or fails.
+  Future<void> getUserGames(int userId) async {
+    _isLoadingLibrary = true;
+    notifyListeners();
+
     try {
       final response = await _apiClient.dio.get('/users/$userId/games');
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data['data'] ?? [];
-        _addedGamesCount = data.length;
-        notifyListeners();
-        return data.map((j) => GameModelDetailed.fromJson(j)).toList();
+        _userGames = data.map((j) => GameModelDetailed.fromJson(j)).toList();
       }
     } catch (e) {
-      log('Failed to fetch user library: $e');
+      log('GameService: Failed to fetch user library: $e');
+    } finally {
+      // Always runs — loading stops regardless of success or failure.
+      _isLoadingLibrary = false;
+      notifyListeners();
     }
-    return [];
   }
 
-  /// Adds a game to the user's library with the specified [hoursPlayed].
+  /// Adds a game to the user's library.
+  ///
+  /// Returns `true` on success. Call [getUserGames] afterwards to refresh the list.
   Future<bool> addUserGame({
     required int userId,
-    required int gameId,
+    required String gameId,
     required int hours,
     required String gameTitle,
     required String gameImageUrl,
   }) async {
-    log('GameService: Adding game $gameId ("$gameTitle") for user $userId with $hours hours...');
+    log('GameService: Adding game $gameId ("$gameTitle") for user $userId...');
     try {
       final response = await _apiClient.dio.post('/users/$userId/games', data: {
         'id_user': userId,
@@ -129,12 +144,13 @@ class GameService extends ChangeNotifier {
   }
 
   /// Removes a game from the user's library.
+  ///
+  /// Returns `true` on success. Call [getUserGames] afterwards to refresh the list.
   Future<bool> deleteUserGame(int userId, String gameId) async {
     log('GameService: Removing game $gameId from user $userId library...');
     try {
-      // Assuming backend supports DELETE /user-games/:userId/:gameId or similar
-      // Or a generic DELETE with body if it matches the current implementation
-      final response = await _apiClient.dio.delete('/users/$userId/games/$gameId');
+      final response =
+          await _apiClient.dio.delete('/users/$userId/games/$gameId');
 
       return response.statusCode == 200 || response.statusCode == 204;
     } catch (e) {
@@ -143,11 +159,17 @@ class GameService extends ChangeNotifier {
     return false;
   }
 
+  // ---------------------------------------------------------------------------
+  // Discovery
+  // ---------------------------------------------------------------------------
+
   /// Fetches trending games for a specific geographical [continent].
-  Future<List<GameModelDetailed>> getTrendingGamesByContinent(String continent) async {
+  Future<List<GameModelDetailed>> getTrendingGamesByContinent(
+      String continent) async {
     log('GameService: Fetching trending games for $continent...');
     try {
-      final response = await _apiClient.dio.get('/games/trending/$continent');
+      final response =
+          await _apiClient.dio.get('/games/trending/$continent');
 
       if (response.statusCode == 200) {
         final List data = response.data['data'] ?? [];
@@ -159,8 +181,12 @@ class GameService extends ChangeNotifier {
     return [];
   }
 
+  // ---------------------------------------------------------------------------
+  // Reviews
+  // ---------------------------------------------------------------------------
+
   /// Fetches all reviews for a specific game.
-  Future<List<ReviewModel>> getReviewsForGame(int gameId) async {
+  Future<List<ReviewModel>> getReviewsForGame(String gameId) async {
     log('GameService: Fetching reviews for game $gameId...');
     try {
       final response = await _apiClient.dio.get('/reviews/game/$gameId');
@@ -176,7 +202,7 @@ class GameService extends ChangeNotifier {
 
   /// Posts a new review for a game.
   Future<bool> postReview({
-    required int gameId,
+    required String gameId,
     required int userId,
     required String text,
   }) async {

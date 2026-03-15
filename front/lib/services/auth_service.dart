@@ -4,6 +4,10 @@ import 'package:front/core/network/secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'dart:developer';
 
+// ---------------------------------------------------------------------------
+// Model
+// ---------------------------------------------------------------------------
+
 class User {
   final int id;
   final String email;
@@ -35,7 +39,8 @@ class User {
       email: json['user_email'] ?? json['email'] ?? '',
       username: json['username'] ?? 'Utilisateur',
       steamId: (json['id_steam'] ?? json['steam_id'])?.toString(),
-      profilePicture: json['profile_picture'] ?? json['image_profil'] ?? json['profile_img'],
+      profilePicture:
+          json['profile_picture'] ?? json['image_profil'] ?? json['profile_img'],
       level: json['level'],
     );
   }
@@ -59,6 +64,10 @@ class User {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Service
+// ---------------------------------------------------------------------------
+
 class AuthService extends ChangeNotifier {
   final ApiClient _apiClient;
   final SecureStorage _secureStorage;
@@ -73,7 +82,11 @@ class AuthService extends ChangeNotifier {
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
 
-  /// Call this when the app starts to see if the user is already logged in
+  // ---------------------------------------------------------------------------
+  // Initialisation
+  // ---------------------------------------------------------------------------
+
+  /// Call this when the app starts to restore a previous session if one exists.
   Future<void> init() async {
     _isLoading = true;
     notifyListeners();
@@ -84,30 +97,26 @@ class AuthService extends ChangeNotifier {
       final refreshToken = await _secureStorage.readRefreshToken();
 
       if (token != null || refreshToken != null) {
-        log('AuthService: Token found (Access: ${token != null}, Refresh: ${refreshToken != null}), attempting recovery...');
-        
         bool profileSuccess = false;
+
         if (token != null) {
           log('AuthService: Verifying profile with current access token...');
           profileSuccess = await _fetchProfile();
         }
 
         if (!profileSuccess && refreshToken != null) {
-          log('AuthService: Profile check failed or access token missing. Attempting refresh recovery...');
+          log('AuthService: Access token failed. Attempting refresh...');
           final refreshed = await _attemptTokenRefresh(refreshToken);
           if (refreshed) {
-            log('AuthService: Refresh successful, fetching profile now...');
             profileSuccess = await _fetchProfile();
-          } else {
-            log('AuthService: Refresh attempt failed.');
           }
         }
 
-        if (_isAuthenticated) {
-          log('AuthService: Session recovered successfully for user: ${_currentUser?.username}');
+        if (!_isAuthenticated) {
+          log('AuthService: Session recovery failed. Clearing stale tokens.');
+          await logout();
         } else {
-          log('AuthService: Session recovery failed after all attempts.');
-          await logout(); // Clear any stale tokens
+          log('AuthService: Session recovered for ${_currentUser?.username}.');
         }
       } else {
         log('AuthService: No tokens found in storage.');
@@ -115,45 +124,21 @@ class AuthService extends ChangeNotifier {
         _currentUser = null;
       }
     } catch (e) {
-      log('AuthService: Unexpected crash during auth initialization: $e');
+      log('AuthService: Crash during init: $e');
       _isAuthenticated = false;
       _currentUser = null;
     } finally {
       _isLoading = false;
-      log('AuthService: Initialization complete. Authenticated: $_isAuthenticated');
+      log('AuthService: Init complete. Authenticated: $_isAuthenticated');
       notifyListeners();
     }
   }
 
-  /// Triggers a manual token refresh, typically during app initialization.
-  Future<bool> _attemptTokenRefresh(String refreshToken) async {
-    try {
-      log('AuthService: Requesting token refresh...');
-      // Use a dedicated Dio instance to avoid interceptor side-effects during boot.
-      final baseUrl = _apiClient.dio.options.baseUrl;
-      final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
-      
-      final response = await refreshDio.post('/auth/refresh', data: {
-        'refreshToken': refreshToken,
-      });
+  // ---------------------------------------------------------------------------
+  // Auth actions
+  // ---------------------------------------------------------------------------
 
-      if (response.statusCode == 200) {
-        final data = response.data['data'];
-        await _secureStorage.writeToken(data['token']);
-        if (data['refreshToken'] != null) {
-          await _secureStorage.writeRefreshToken(data['refreshToken']);
-        }
-        return true;
-      }
-    } catch (e) {
-      log('AuthService: Manual refresh attempt failed: $e');
-    }
-    return false;
-  }
-
-  /// Attempts to sign in with [email] and [password].
-  ///
-  /// Persists the returned tokens and fetches the user's profile on success.
+  /// Signs in with [email] and [password].
   Future<bool> signIn(String email, String password) async {
     try {
       final response = await _apiClient.dio.post('/auth/signin', data: {
@@ -162,36 +147,28 @@ class AuthService extends ChangeNotifier {
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data['data'];
-        final token = data['token'];
-        final refreshToken = data['refreshToken'];
-
-        await _secureStorage.writeToken(token);
-        await _secureStorage.writeRefreshToken(refreshToken);
+        final data = response.data['data'] as Map<String, dynamic>;
+        await _secureStorage.writeToken(data['token']);
+        await _secureStorage.writeRefreshToken(data['refreshToken']);
 
         _updateCurrentUser(data);
-        
-        // Fetch steam user details explicitly here to populate steam_id.
+
         final int? userId = _currentUser?.id;
-        if (userId != null) {
-          await _fetchSteamUser(userId);
-        }
-        
+        if (userId != null) await _fetchSteamUser(userId);
+
         _isAuthenticated = true;
         notifyListeners();
         return true;
       }
-      return false;
     } on DioException catch (e) {
       log('AuthService: Sign-in failed: ${e.response?.data}');
-      return false;
     } catch (e) {
       log('AuthService: Unexpected sign-in error: $e');
-      return false;
     }
+    return false;
   }
 
-  /// Registers a new user account with [username], [email], and [password].
+  /// Registers a new account, then automatically signs in on success.
   Future<bool> signUp(String username, String email, String password) async {
     try {
       final response = await _apiClient.dio.post('/auth/signup', data: {
@@ -201,20 +178,17 @@ class AuthService extends ChangeNotifier {
       });
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-         // Automatically sign in after successful registration.
-         return await signIn(email, password);
+        return await signIn(email, password);
       }
-      return false;
     } on DioException catch (e) {
       log('AuthService: Sign-up failed: ${e.response?.data}');
-      return false;
     } catch (e) {
       log('AuthService: Unexpected sign-up error: $e');
-      return false;
     }
+    return false;
   }
 
-  /// Logs the user out by clearing local tokens and resetting state.
+  /// Logs out by clearing local tokens and resetting state.
   Future<void> logout() async {
     log('AuthService: Logging out...');
     await _secureStorage.deleteTokens();
@@ -233,71 +207,141 @@ class AuthService extends ChangeNotifier {
       final response = await _apiClient.dio.delete('/users/$userId');
 
       if (response.statusCode == 200) {
-        log('AuthService: Account deleted successfully.');
         await logout();
         return true;
       }
-      return false;
     } on DioException catch (e) {
       log('AuthService: Account deletion failed: ${e.response?.data}');
-      return false;
     } catch (e) {
       log('AuthService: Unexpected error deleting account: $e');
-      return false;
     }
+    return false;
   }
 
-  /// Internal method to fetch the current user profile
-  /// Returns true if the profile was successfully fetched and state updated
-  Future<bool> _fetchProfile() async {
-     try {
-        log('AuthService: Requesting /auth/me...');
-        final response = await _apiClient.dio.get('/auth/me');
-        if (response.statusCode == 200) {
-          // NOTE: The /me endpoint returns the user object directly (no 'data' wrapper)
-          final success = _updateCurrentUser(response.data);
-          if (!success) {
-            log('AuthService: Data mapping failed for /me response. Data: ${response.data}');
-            return false;
-          }
+  // ---------------------------------------------------------------------------
+  // Steam
+  // ---------------------------------------------------------------------------
 
-          _isAuthenticated = true; // Mark as authenticated now that we have the profile
-          
-          final int? userId = _currentUser?.id;
-          if (userId != null) {
-            await _fetchSteamUser(userId);
-          }
+  /// Links or updates a Steam ID for the current user.
+  ///
+  /// Tries PUT first; if the backend returns 404 (no Steam profile yet), falls
+  /// back to POST to create one.
+  Future<bool> updateSteamId(String steamId) async {
+    final userId = _currentUser?.id;
+    if (userId == null) return false;
 
-          notifyListeners();
-          return true;
+    final body = {
+      'id_steam': steamId,
+      'id_user': userId,
+      'username': _currentUser?.username ?? 'Utilisateur',
+    };
+
+    try {
+      // Try updating an existing steam profile.
+      final response =
+          await _apiClient.dio.put('/steam_users/$userId', data: body);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _currentUser = _currentUser!.copyWith(steamId: steamId);
+        notifyListeners();
+        return true;
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        // No steam profile yet — create one.
+        try {
+          final response =
+              await _apiClient.dio.post('/steam_users', data: body);
+          if (response.statusCode == 200 || response.statusCode == 201) {
+            _currentUser = _currentUser!.copyWith(steamId: steamId);
+            notifyListeners();
+            return true;
+          }
+        } catch (postError) {
+          log('AuthService: Failed to create steam profile: $postError');
         }
-     } catch (e) {
-        log('AuthService: Failed to fetch /me: $e');
-     }
-     return false;
+      } else {
+        log('AuthService: Failed to update steam profile: ${e.response?.data}');
+      }
+    } catch (e) {
+      log('AuthService: Unexpected error in updateSteamId: $e');
+    }
+    return false;
   }
 
-  /// Helper to standardize user data from different API responses
+  // ---------------------------------------------------------------------------
+  // Private helpers
+  // ---------------------------------------------------------------------------
+
+  Future<bool> _attemptTokenRefresh(String refreshToken) async {
+    try {
+      log('AuthService: Requesting token refresh...');
+      final baseUrl = _apiClient.dio.options.baseUrl;
+      // Use a fresh Dio to avoid interceptor loops during boot.
+      final refreshDio = Dio(BaseOptions(baseUrl: baseUrl));
+
+      final response = await refreshDio.post('/auth/refresh', data: {
+        'refreshToken': refreshToken,
+      });
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as Map<String, dynamic>;
+        await _secureStorage.writeToken(data['token']);
+        if (data['refreshToken'] != null) {
+          await _secureStorage.writeRefreshToken(data['refreshToken']);
+        }
+        return true;
+      }
+    } catch (e) {
+      log('AuthService: Token refresh failed: $e');
+    }
+    return false;
+  }
+
+  Future<bool> _fetchProfile() async {
+    try {
+      log('AuthService: Requesting /auth/me...');
+      final response = await _apiClient.dio.get('/auth/me');
+      if (response.statusCode == 200) {
+        final success =
+            _updateCurrentUser(response.data as Map<String, dynamic>);
+        if (!success) {
+          log('AuthService: Data mapping failed. Data: ${response.data}');
+          return false;
+        }
+
+        _isAuthenticated = true;
+
+        final int? userId = _currentUser?.id;
+        if (userId != null) await _fetchSteamUser(userId);
+
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      log('AuthService: Failed to fetch /me: $e');
+    }
+    return false;
+  }
+
   bool _updateCurrentUser(Map<String, dynamic> data) {
     try {
       if (_currentUser == null) {
         _currentUser = User.fromJson(data);
       } else {
-        // Merge updates into existing user
-        final updatedData = User.fromJson(data);
+        final updated = User.fromJson(data);
         _currentUser = _currentUser!.copyWith(
-          email: updatedData.email.isNotEmpty ? updatedData.email : null,
-          username: updatedData.username != 'Utilisateur' ? updatedData.username : null,
-          steamId: updatedData.steamId,
-          profilePicture: updatedData.profilePicture,
-          level: updatedData.level,
+          email: updated.email.isNotEmpty ? updated.email : null,
+          username: updated.username != 'Utilisateur' ? updated.username : null,
+          steamId: updated.steamId,
+          profilePicture: updated.profilePicture,
+          level: updated.level,
         );
       }
 
       if (_currentUser?.id == 0) {
-        log('AuthService: Warning - User ID is 0 or missing in API response data: $data');
+        log('AuthService: Warning — user ID is 0. Raw data: $data');
       }
-
       return true;
     } catch (e) {
       log('AuthService: Critical error mapping user data: $e');
@@ -305,87 +349,18 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  /// Internal method to fetch the Steam user by user ID
   Future<void> _fetchSteamUser(int userId) async {
     try {
       final response = await _apiClient.dio.get('/steam_users/$userId');
-
-      if (response.statusCode == 200) {
-        // Merge steam data into the current user object
-        if (_currentUser != null) {
-          _currentUser = _currentUser!.copyWith(
-            steamId: response.data['id_steam']?.toString(),
-            profilePicture: response.data['image_profil'],
-            level: response.data['level'],
-          );
-        }
+      if (response.statusCode == 200 && _currentUser != null) {
+        _currentUser = _currentUser!.copyWith(
+          steamId: response.data['id_steam']?.toString(),
+          profilePicture: response.data['image_profil'],
+          level: response.data['level'],
+        );
       }
     } catch (e) {
-      log('Failed to fetch steam user info (user may not have linked steam): $e');
+      log('AuthService: No Steam profile found for user $userId (may not be linked).');
     }
-  }
-
-  /// Public method to update or add a Steam ID for the current user
-  Future<bool> updateSteamId(String steamId) async {
-    final userId = _currentUser?.id;
-    if (userId == null) return false;
-
-    try {
-      // First, try to fetch if the user already has a steam profile created
-      final checkResponse = await _apiClient.dio.get('/steam_users/$userId');
-      
-      Response response;
-      if (checkResponse.statusCode == 200) {
-        // Steam user exists, we update it via PUT
-        final steamUserId = checkResponse.data['id_steam_user'] ?? checkResponse.data['id']; // ID of the steam_users row if applicable, but the route uses id_user usually
-        // Actually the backend update route `steamUserRoutes.put('/:id'` expects the SteamUser ID or User ID depending on implementation.
-        // Looking at backend it might expect id_steam_user, but let's assume it puts by user ID since it's a 1:1 relation.
-        // A safer way if it is not 100% known if it's PUT by user_id or steam_id is to handle errors
-          response = await _apiClient.dio.put('/steam_users/$userId', data: {
-            'id_steam': steamId,
-            'id_user': userId,
-            'username': _currentUser?.username ?? 'Utilisateur',
-          });
-      } else {
-         // Create new steam user
-         throw Exception("Not found");
-      }
-
-        if (response.statusCode == 200 || response.statusCode == 201) {
-          // Update local state
-          if (_currentUser != null) {
-            _currentUser = _currentUser!.copyWith(steamId: steamId);
-          }
-          notifyListeners();
-          return true;
-        }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 404) {
-        // Steam user doesn't exist yet, we create it via POST
-        try {
-          final response = await _apiClient.dio.post('/steam_users', data: {
-            'id_steam': steamId,
-            'id_user': userId,
-            'username': _currentUser?.username ?? 'Utilisateur',
-          });
-          if (response.statusCode == 200 || response.statusCode == 201) {
-            if (_currentUser != null) {
-              _currentUser = _currentUser!.copyWith(steamId: steamId);
-            }
-            notifyListeners();
-            return true;
-          }
-        } catch (postError) {
-          log('Failed to create steam user: $postError');
-        }
-      } else {
-        log('Failed to update steam user: ${e.response?.data}');
-      }
-    } catch (e) {
-      log('Unexpected error updating steam id: $e');
-    }
-    
-    // Fallback: If the PUT/POST to steam_users fails, try the old /users/ update if have_steamid needs true
-    return false;
   }
 }
