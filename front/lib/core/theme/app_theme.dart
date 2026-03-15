@@ -35,6 +35,26 @@ class AppTheme {
   /// Color for card backgrounds.
   static const Color cardGrey = Color(0xFF1b2838);
 
+  /// A gradient for header backgrounds.
+  static const LinearGradient primaryGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      Color(0xFF1b2838),
+      Color(0xFF0d121a),
+    ],
+  );
+
+  /// A more vibrant gradient for highlights.
+  static const LinearGradient accentGradient = LinearGradient(
+    begin: Alignment.bottomLeft,
+    end: Alignment.topRight,
+    colors: [
+      Color(0xFF171a21),
+      Color(0xFF2a475e),
+    ],
+  );
+
   /// Generates the application's overall [ThemeData].
   static ThemeData get theme => darkTheme;
 
@@ -49,6 +69,13 @@ class AppTheme {
         secondary: blueGreen,
         surface: lightBlue,
         background: darkBlue,
+      ),
+      cardTheme: CardThemeData(
+        color: cardGrey,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
       
       // Configuration for text styles across the app.

@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:front/core/theme/app_theme.dart';
 import 'package:front/features/auth/widgets/sign_in_form_fields.dart';
 import 'package:front/features/auth/widgets/sign_in_button.dart';
-import 'package:front/shared/widgets/steam_logo.dart';
+import 'package:front/shared/widgets/app_title.dart';
 
 /// The login page allowing users to authenticate with their email and password.
 class SignInPage extends StatefulWidget {
@@ -36,16 +36,11 @@ class _SignInPageState extends State<SignInPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
 
-              // Logo (SVG)
-              Center(
-                child: SteamLogo(
-                  size: 120,
-                  color: Colors.white,
-                ),
-              ),
+              // App title with Steam logo
+              const Center(child: AppTitle()),
               const SizedBox(height: 48),
 
-              // Title
+              // Section title
               Text(
                 'Connexion',
                 textAlign: TextAlign.center,

@@ -6,6 +6,8 @@ import 'package:front/features/main/widgets/recommendation_list.dart';
 import 'package:front/models/recommendation_model.dart';
 import 'package:front/models/game_model.dart';
 import 'package:front/services/chatbot_service.dart';
+import 'package:front/core/theme/app_theme.dart';
+import 'package:front/shared/widgets/app_title.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
@@ -45,11 +47,15 @@ class MainPage extends StatelessWidget {
     ];
 
     return Scaffold(
-      backgroundColor:
-          const Color(0xFF1B2838), // Standard Steam-like background
+      backgroundColor: AppTheme.darkBlue,
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          // App title
+          const SizedBox(height: 12),
+          const AppTitle(),
+          const SizedBox(height: 24),
+
           // 1. User Profile Header
           ProfileCard(
             avatarUrl: currentUser?.profilePicture ??
@@ -84,7 +90,7 @@ class MainPage extends StatelessWidget {
               final lastMsg = messages.last['content'] ?? '';
 
               return ListTile(
-                tileColor: const Color(0xFF2A475E),
+                tileColor: AppTheme.cardGrey,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
                 leading:
@@ -115,7 +121,7 @@ class MainPage extends StatelessWidget {
       context: context,
       isScrollControlled:
           true, // Allows the modal to take up more space if needed
-      backgroundColor: const Color(0xFF1B2838),
+      backgroundColor: AppTheme.cardGrey,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

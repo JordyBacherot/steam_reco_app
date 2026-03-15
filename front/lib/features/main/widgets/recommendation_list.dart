@@ -21,11 +21,11 @@ class RecommendationList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SectionTitle(title: 'Recent Recommendations:'),
+        const SectionTitle(title: 'Recommandations récentes::'),
         if (recommendations.isEmpty)
           EmptyState(
-            message: "No recommendations yet.",
-            buttonLabel: 'Get Started!',
+            message: "Aucune recommandation pour le moment.",
+            buttonLabel: 'Commencer!',
             onButtonPressed: () => context.go('/reco'),
           )
         else
@@ -38,8 +38,8 @@ class RecommendationList extends StatelessWidget {
               final reco = recommendations[index];
               final firstGame = reco.games.isNotEmpty ? reco.games.first : null;
               return GameCard(
-                name: "${reco.type} Recommendation",
-                description: "Session from ${reco.createdAt.day}/${reco.createdAt.month} at ${reco.createdAt.hour}:${reco.createdAt.minute}",
+                name: "${reco.type} Recommandation",
+                description: "Session du ${reco.createdAt.day}/${reco.createdAt.month} à ${reco.createdAt.hour}:${reco.createdAt.minute}",
                 imageUrl: firstGame?.imageUrl,
                 onTap: () => context.go('/reco'),
               );
