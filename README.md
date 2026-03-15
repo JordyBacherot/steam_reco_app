@@ -51,8 +51,9 @@ Copiez les fichiers d'exemple `.env.example` en `.env` dans les dossiers suivant
 | `api/`                | `cp api/.env.example api/.env`                               | Config Hono (DB Host, API Key Reco...)   |
 | `api_recommendation/` | `cp api_recommendation/.env.example api_recommendation/.env` | Config sécurisée (API Key)               |
 | `db/`                 | `cp db/.env.example db/.env`                                 | Identifiants MariaDB (User, Password...) |
+| `front/`              | `cp front/.env.example front/.env`                           | Adresse de l'API Hono                    |
 
-> **Note** : Les fichiers `.env.example` sont pré-remplis avec des valeurs par défaut fonctionnant pour l'environnement Docker local. Les seuls fichiers à compléter sont `api_recommendation/.env`, il faut renseigner la clé STEAM_API_KEY et `api/.env`, il faut renseigner GROQ_API_KEY.
+> **Note** : Les fichiers `.env.example` sont pré-remplis avec des valeurs par défaut fonctionnant pour l'environnement Docker local, il faut les copier en `.env` et les compléter. Les seuls fichiers à réellement compléter sont `api_recommendation/.env`, il faut renseigner la clé STEAM_API_KEY et `api/.env`, il faut renseigner GROQ_API_KEY.
 
 ### 3. Lancement de l'Application
 
@@ -127,14 +128,38 @@ docker compose up -d db adminer
 ### 4. API Recommandation (Python/FastAPI)
 
 1.  **Arrêter le conteneur Docker** (si lancé) pour libérer le port 8000 :
+
     ```bash
     docker stop api_recommendation
     ```
-2.  **Installation & Lancement** :
+
+2.  **Pré-requis** :
+    - **Python 3.10+ & Poetry** installé.
+
+3.  **Installation & Lancement** :
     ```bash
     cd api_recommendation
     poetry install
     poetry run fastapi run src/main.py
     ```
+
+### 5. Frontend (Flutter Web)
+
+1.  **Arrêter le conteneur Docker** (si lancé) pour libérer le port 5173 :
+    ```bash
+    docker stop front
+    ```
+2.  **Pré-requis** :
+    - **Flutter SDK** installé.
+    - Un navigateur (Chrome ou Edge) pour le rendu.
+3.  **Installation & Lancement** :
+    ```bash
+    cd front
+    flutter pub get
+    flutter run -d chrome
+    ```
+
+> **Note** : Si vous rencontrez des problèmes de CORS en développement local lors des appels API, lancez Flutter avec la commande suivante :
+> `flutter run -d chrome --web-browser-flag "--disable-web-security"`
 
 ⚠️ **Note** : En mode hybride, assurez-vous que vos variables d'environnement (`.env`) pointent vers `localhost` pour les services qui tournent sur votre machine, et non vers les noms de conteneurs Docker (comme `db` ou `api_recommendation`).

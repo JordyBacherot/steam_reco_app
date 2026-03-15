@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:front/models/chat_message.dart';
-import 'package:provider/provider.dart';
-import 'package:front/services/chatbot_service.dart';
-import 'package:front/core/theme/app_theme.dart';
+// File: front/features/chatbot/chatbot_page.dart
 
-/// An interactive page where users can chat with an AI game advisor.
-///
-/// Supports streaming responses and Markdown rendering for formatted AI advice.
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:front/models/chat_message.dart';
+import 'package:front/services/chatbot_service.dart';
+// N'oublie pas d'importer tes nouveaux widgets :
+import 'package:front/features/chatbot/widgets/chat_bubble.dart';
+import 'package:front/features/chatbot/widgets/chat_input.dart';
+
 class ChatbotPage extends StatefulWidget {
   const ChatbotPage({super.key});
 
@@ -15,25 +15,25 @@ class ChatbotPage extends StatefulWidget {
   State<ChatbotPage> createState() => _ChatbotPageState();
 }
 
-/// State for [ChatbotPage] managing message history, streaming, and UI scrolling.
 class _ChatbotPageState extends State<ChatbotPage> {
-  // Liste qui stocke tout l'historique de la conversation actuelle
   final List<ChatMessage> _messages = [
     ChatMessage(
         role: 'assistant',
-        content: "Salut ! Je suis ton conseiller jeu vidéo personnel. Dis-moi ce que tu aimes, je te trouve ta prochaine pépite ! 🎮")
+        content:
+            "Salut ! Je suis ton conseiller jeu vidéo personnel. Dis-moi ce que tu aimes, je te trouve ta prochaine pépite ! 🎮")
   ];
 
-  // Contrôleur pour lire et effacer ce que l'utilisateur tape dans le champ de texte
   final TextEditingController _textController = TextEditingController();
-
-  // Contrôleur pour gérer le défilement (scroll) de la liste des messages
   final ScrollController _scrollController = ScrollController();
-
-  // Indique si on attend une réponse de l'API (pour désactiver le bouton envoyer)
   bool _isLoading = false;
+  late final ChatbotService _chatbotService;
 
-  // Fonction utilitaire pour scroller tout en bas de la liste automatiquement
+  @override
+  void initState() {
+    super.initState();
+    _chatbotService = Provider.of<ChatbotService>(context, listen: false);
+  }
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -44,196 +44,58 @@ class _ChatbotPageState extends State<ChatbotPage> {
     }
   }
 
-  // No longer manually instantiating ChatbotService
-  late final ChatbotService _chatbotService;
-
-  @override
-  void initState() {
-    super.initState();
-    _chatbotService = Provider.of<ChatbotService>(context, listen: false);
-  }
-
-  // Permet à l'utilisateur de réinitialiser le contexte de la discussion
   void _resetConversation() {
     setState(() {
       _messages.clear();
-      _messages.add(
-        ChatMessage(
-            role: 'assistant',
-            content: "Salut ! Je suis ton conseiller jeu vidéo personnel. Dis-moi ce que tu aimes, je te trouve ta prochaine pépite ! 🎮")
-      );
+      _messages.add(ChatMessage(
+          role: 'assistant',
+          content:
+              "Salut ! Je suis ton conseiller jeu vidéo personnel. Dis-moi ce que tu aimes, je te trouve ta prochaine pépite ! 🎮"));
       _chatbotService.resetSession();
     });
-    
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Nouvelle discussion démarrée.")),
     );
   }
 
-  // Déclenché quand l'utilisateur clique sur "Envoyer" (ou touche Entrée)
   Future<void> _handleSubmitted(String text) async {
-    if (text.trim().isEmpty) return; // Ignore les messages vides
+    if (text.trim().isEmpty) return;
 
-    _textController.clear(); // Vide le champ de texte
+    _textController.clear();
 
-    // 1. Mise à jour de l'interface (setState) pour ajouter le message utilisateur
     setState(() {
       _messages.add(ChatMessage(role: 'user', content: text));
-
-      // ASTUCE STREAMING : On crée TOUT DE SUITE une bulle vide pour l'assistant.
-      // Cette bulle va se remplir progressivement à mesure qu'on reçoit les mots.
       _messages.add(ChatMessage(role: 'assistant', content: ''));
       _isLoading = true;
     });
 
-    // on scroll en bas pour voir la nouvelle bulle vide
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
 
-    // 2. Préparation de l'historique à l'IA (On enlève les 2 derniers messages :
-    // le message actuel de l'utilisateur et la bulle vide qu'on vient de créer)
     final history = _messages.sublist(0, _messages.length - 2);
 
-    // 3. Appel à l'API via notre Service (Lancement du Stream)
     try {
       final stream = _chatbotService.sendMessageStream(
         message: text,
         history: history,
       );
 
-      // On écoute le Stream : chaque "chunk" est un nouveau morceau de texte envoyé par le serveur
       await for (final chunk in stream) {
         setState(() {
-          // On récupère l'index de la dernière bulle (celle de l'assistant)
           final lastMessageIndex = _messages.length - 1;
           final currentContent = _messages[lastMessageIndex].content;
 
-          // On remplace la bulle par une nouvelle bulle contenant l'ancien texte + le nouveau mot
           _messages[lastMessageIndex] =
               ChatMessage(role: 'assistant', content: currentContent + chunk);
         });
 
-        // On scroll vers le bas à chaque nouveau mot pour suivre la lecture
         WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
       }
     } finally {
-      // Quoi qu'il arrive (succès ou erreur), on remet isLoading à false
       setState(() {
         _isLoading = false;
       });
     }
-  }
-
-  Widget _buildMessage(ChatMessage message) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Row(
-        mainAxisAlignment:
-            message.isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (message.isAssistant)
-            const CircleAvatar(
-              backgroundColor: AppTheme.darkerBlue,
-              child: Icon(Icons.smart_toy, color: AppTheme.primaryBlue, size: 20),
-            ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: message.isUser
-                    ? AppTheme.primaryBlue.withOpacity(0.2)
-                    : AppTheme.darkerBlue,
-                borderRadius: BorderRadius.circular(16),
-                border: message.isUser
-                    ? Border.all(
-                        color: AppTheme.primaryBlue.withOpacity(0.5))
-                    : null,
-              ),
-              child: MarkdownBody(
-                data: message.content,
-                selectable: true,
-                styleSheet: MarkdownStyleSheet(
-                  p: const TextStyle(color: Colors.white),
-                  h1: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                  h2: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                  h3: const TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                  listBullet: const TextStyle(color: Colors.white),
-                  code: TextStyle(
-                    backgroundColor: Colors.black.withOpacity(0.4),
-                    color: AppTheme.primaryBlue,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          if (message.isUser)
-            const CircleAvatar(
-              backgroundColor: AppTheme.primaryBlue,
-              child: Icon(Icons.person, color: AppTheme.darkBlue, size: 20),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextComposer() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
-      decoration: BoxDecoration(
-        color:
-            AppTheme.darkerBlue, // Couleurs Steam pour la barre de saisie
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, -2),
-            blurRadius: 4,
-            color: Colors.black.withOpacity(0.3),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _textController,
-                onSubmitted: _isLoading ? null : _handleSubmitted,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  hintText: 'Posez une question sur vos jeux...',
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: AppTheme.darkBlue,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              decoration: const BoxDecoration(
-                color: AppTheme.primaryBlue, // Bouton d'envoi bleu Steam
-                shape: BoxShape.circle,
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.send, color: AppTheme.darkBlue),
-                onPressed: _isLoading
-                    ? null
-                    : () => _handleSubmitted(_textController.text),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
@@ -258,7 +120,8 @@ class _ChatbotPageState extends State<ChatbotPage> {
               controller: _scrollController,
               itemCount: _messages.length,
               itemBuilder: (context, index) {
-                return _buildMessage(_messages[index]);
+                // Utilisation du nouveau widget ChatBubble
+                return ChatBubble(message: _messages[index]);
               },
             ),
           ),
@@ -267,7 +130,12 @@ class _ChatbotPageState extends State<ChatbotPage> {
               padding: EdgeInsets.all(8.0),
               child: CircularProgressIndicator(),
             ),
-          _buildTextComposer(),
+          // Utilisation du nouveau widget ChatInput
+          ChatInput(
+            controller: _textController,
+            isLoading: _isLoading,
+            onSubmitted: _handleSubmitted,
+          ),
         ],
       ),
     );
