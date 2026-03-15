@@ -29,7 +29,7 @@ class SimilarGamesList extends StatelessWidget {
       children: [
         const SizedBox(height: 32),
         Text(
-          "Jeux joués par les autres joueurs :",
+          "Jeux similaires :",
           style: Theme.of(context).textTheme.titleLarge,
         ),
         const SizedBox(height: 16),

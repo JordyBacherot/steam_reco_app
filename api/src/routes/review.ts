@@ -12,7 +12,7 @@ import { getReviewById } from '../handlers/review/getReviewById';
 export const createReviewSchema = z.object({
   id_game: z.number().int({ message: "ID Game invalide" }),
   id_user: z.number().int({ message: "ID User invalide" }),
-  text: z.string().min(10, { message: "Le message doit faire au moins 10 caractères" }),
+  text: z.string().min(2, { message: "Le message doit faire au moins 2 caractères" }),
 });
 
 export type CreateReviewInput = z.infer<typeof createReviewSchema>;
