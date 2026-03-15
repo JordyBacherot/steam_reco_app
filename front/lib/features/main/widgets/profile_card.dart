@@ -30,13 +30,8 @@ class ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4,
-      color: AppTheme.cardGrey,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         onTap: () {
           // Navigate to the profile page when tapped
           context.go('/profile'); 
@@ -63,14 +58,14 @@ class ProfileCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Level $level',
+                      'Niveau $level',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.lightGreyText,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Last connexion: $lastConnection',
+                      'Dernière connexion: $lastConnection',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppTheme.greyText,
                       ),

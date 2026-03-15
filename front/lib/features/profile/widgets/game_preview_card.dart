@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:front/core/theme/app_theme.dart';
 import 'package:front/models/game_model.dart';
 
 /// A preview card shown during the search process before a game is added.
@@ -26,11 +27,6 @@ class GamePreviewCard extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Card(
-          elevation: 4,
-          color: const Color(0xFF2A475E),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -66,7 +62,7 @@ class GamePreviewCard extends StatelessWidget {
                 // Add Button
                 IconButton(
                   onPressed: onAddPressed,
-                  icon: const Icon(Icons.add_circle, color: Color(0xFF66c0f4), size: 32),
+                  icon: const Icon(Icons.add_circle, color: AppTheme.primaryBlue, size: 32),
                 ),
               ],
             ),

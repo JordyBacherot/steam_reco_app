@@ -24,10 +24,6 @@ class ChatPreviewCard extends StatelessWidget {
       children: [
         const SectionTitle(title: 'Dernière discussion IA :'),
         Card(
-          elevation: 3,
-          color: const Color(0xFF1B2838), // Ton sombre Steam-like
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(

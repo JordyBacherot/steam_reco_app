@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:front/models/recommendation_model.dart';
 import 'package:intl/intl.dart';
+import 'package:front/core/theme/app_theme.dart';
 
 /// Displays a single recommendation session as a card.
 class RecommendationCard extends StatelessWidget {
@@ -19,9 +20,6 @@ class RecommendationCard extends StatelessWidget {
     final formattedDate = DateFormat('dd/MM/yyyy – HH:mm').format(recommendation.createdAt);
 
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: const Color(0xFF2A475E),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: onTap,
