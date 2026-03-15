@@ -9,6 +9,7 @@ import 'package:front/shared/widgets/status_views.dart';
 import 'game_image.dart';
 import 'game_header_widget.dart';
 import 'similar_games_list.dart';
+import 'game_reviews_widget.dart';
 
 class GamePages extends StatefulWidget {
   final String gameId;
@@ -135,6 +136,8 @@ class _GamePagesState extends State<GamePages> {
                   ),
                   
                   SimilarGamesList(similarGames: _similarGames),
+                  
+                  GameReviewsWidget(gameId: game.idGame),
                 ],
               ),
             ),
