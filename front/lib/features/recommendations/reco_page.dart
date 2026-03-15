@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:front/services/auth_service.dart';
+import 'package:front/services/game_service.dart';
 import 'package:go_router/go_router.dart';
 import 'package:front/features/recommendations/trend_map_modal.dart';
 import 'package:front/core/theme/app_theme.dart';
@@ -17,18 +18,30 @@ class RecoPage extends StatefulWidget {
 
 /// State for [RecoPage] managing the display of recommendation options.
 class _RecoPageState extends State<RecoPage> {
+
+  @override
+  void initState() {
+    super.initState();
+    final userId = context.read<AuthService>().currentUser?.id;
+    if (userId != null) {
+      context.read<GameService>().getUserGames(userId);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Access the current user and app state via AuthService
     final authService = Provider.of<AuthService>(context);
     final currentUser = authService.currentUser;
 
+    final gameService = Provider.of<GameService>(context);
+
     // Check if the user has linked a Steam account
     final String steamId = currentUser?.steamId ?? '';
     final bool hasSteamId = steamId.isNotEmpty;
 
     // Check if the user has enough games in their custom library
-    final int addedGamesCount = authService.addedGamesCount;
+    final int addedGamesCount = gameService.addedGamesCount;
     final bool hasEnoughGames = addedGamesCount >= 3;
 
     return Scaffold(

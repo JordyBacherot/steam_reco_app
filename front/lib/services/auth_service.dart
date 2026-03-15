@@ -68,12 +68,10 @@ class AuthService extends ChangeNotifier {
   bool _isAuthenticated = false;
   User? _currentUser;
   bool _isLoading = true;
-  int _addedGamesCount = 0;
 
   bool get isAuthenticated => _isAuthenticated;
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
-  int get addedGamesCount => _addedGamesCount;
 
   /// Call this when the app starts to see if the user is already logged in
   Future<void> init() async {
