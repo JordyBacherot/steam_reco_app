@@ -1,13 +1,17 @@
 meta {
   name: DeleteSteamUser
   type: http
-  seq: 4
+  seq: 3
 }
 
 delete {
-  url: {{host}}/steam_users/1
+  url: {{host}}/steam_users/{{userId}}
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 assert {

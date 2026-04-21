@@ -5,9 +5,13 @@ meta {
 }
 
 put {
-  url: {{host}}/users/{{new_userId}}
+  url: {{host}}/users/{{userId}}
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 body:json {

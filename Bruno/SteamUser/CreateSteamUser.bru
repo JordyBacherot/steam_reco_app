@@ -1,19 +1,23 @@
 meta {
   name: CreateSteamUser
   type: http
-  seq: 2
+  seq: 1
 }
 
 post {
   url: {{host}}/steam_users
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 body:json {
   {
     "id_steam": "76561198012345679",
-    "id_user": 1,
+    "id_user": {{userId}},
     "username": "SteamBrunoUser",
     "level": 42
   }

@@ -5,9 +5,13 @@ meta {
 }
 
 delete {
-  url: {{host}}/users/1/games/220
+  url: {{host}}/users/{{userId}}/games/220
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 assert {

@@ -1,13 +1,17 @@
 meta {
   name: UpdateSteamUser
   type: http
-  seq: 1
+  seq: 2
 }
 
 put {
-  url: {{host}}/steam_users/1
+  url: {{host}}/steam_users/{{userId}}
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 body:json {

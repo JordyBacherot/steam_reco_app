@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: {{host}}/users/1/games
+  url: {{host}}/users/{{userId}}/games
   body: json
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 body:json {

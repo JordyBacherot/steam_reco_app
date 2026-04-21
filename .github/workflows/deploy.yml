@@ -40,17 +40,49 @@ jobs:
         run: |
           cd Bruno
 
-          # 1. Tests d'Authentification (pas besoin de token préalable)
+          # 1. Auth (signup + signin)
           bru run Auth/SignUp.bru --env dev --env-var api_key=test_key_123
           bru run Auth/SignIn.bru --env dev --env-var api_key=test_key_123
 
-          # 2. Récupération d'un Token d'accès
-          # Comme les requêtes 'bru run' sont isolées, le token n'est pas sauvegardé entre elles
-          TOKEN=$(curl -s -X POST http://localhost:3000/auth/signin -H "Content-Type: application/json" -d '{"email":"test@example.com","password":"password123"}' | jq -r '.data.token')
+          # 2. Récupération du token JWT et de l'userId depuis le JWT
+          TOKEN=$(curl -s -X POST http://localhost:3000/auth/signin \
+            -H "Content-Type: application/json" \
+            -d '{"email":"test@example.com","password":"password123"}' | jq -r '.data.token')
+          USER_ID=$(curl -s http://localhost:3000/auth/me \
+            -H "Authorization: Bearer $TOKEN" | jq -r '.id_user')
 
-          # 3. Exécution des tests utilisateurs et protégés (injection du token)
-          bru run GameUser/AddGameToLibrary.bru --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
-          bru run GameUser/GetUserLibrary.bru --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
+          # 3. Tests User (lecture + mise à jour — suppression en dernier)
+          bru run User/GetAllUsers.bru --env dev --env-var token=$TOKEN
+          bru run User/GetUserById.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
+          bru run User/UpdateUser.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
+
+          # 4. Tests Game (création via curl pour récupérer l'ID, update + delete via Bruno)
+          GAME_ID=$(curl -s -X POST http://localhost:3000/games \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $TOKEN" \
+            -d '{"name":"CI Test Game","description":"A test game for the CI pipeline","studio":"TestStudio","image_url":"https://example.com/game.jpg"}' | jq -r '.id_game')
+          bru run Game/UpdateGame.bru --env dev --env-var token=$TOKEN --env-var game_id=$GAME_ID
+          bru run Game/DeleteGame.bru --env dev --env-var token=$TOKEN --env-var game_id=$GAME_ID
+
+          # 5. Tests Review (création via curl pour récupérer l'ID, update + delete via Bruno)
+          REVIEW_ID=$(curl -s -X POST http://localhost:3000/reviews \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $TOKEN" \
+            -d '{"id_game":10,"text":"CI test review"}' | jq -r '.id_review')
+          bru run Review/UpdateReview.bru --env dev --env-var token=$TOKEN --env-var reviewId=$REVIEW_ID
+          bru run Review/DeleteReview.bru --env dev --env-var token=$TOKEN --env-var reviewId=$REVIEW_ID
+
+          # 6. Tests GameUser
+          bru run GameUser/AddGameToLibrary.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
+          bru run GameUser/GetUserLibrary.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
+          bru run GameUser/RemoveGameFromLibrary.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
+
+          # 7. Tests SteamUser (Create → Update → Delete)
+          bru run SteamUser/CreateSteamUser.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
+          bru run SteamUser/UpdateSteamUser.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
+          bru run SteamUser/DeleteSteamUser.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
+
+          # 8. Tests Recommendation
           bru run "Recommendation (Hono)/Chat Stream (Hono).bru" --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
           bru run "Recommendation (Hono)/Manual Reco (Hono).bru" --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN
           bru run "Recommendation (Hono)/Nearest Games (Hono).bru" --env dev --env-var api_key=test_key_123 --env-var token=$TOKEN

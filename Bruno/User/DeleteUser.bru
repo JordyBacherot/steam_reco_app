@@ -5,9 +5,13 @@ meta {
 }
 
 delete {
-  url: {{host}}/users/{{new_userId}}
+  url: {{host}}/users/{{userId}}
   body: none
-  auth: inherit
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{token}}
 }
 
 assert {
