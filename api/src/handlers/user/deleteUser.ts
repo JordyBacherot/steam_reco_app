@@ -12,13 +12,19 @@ export const deleteUser = async (c: Context) => {
   try {
     // 1. Récupération de l'ID depuis l'URL
     const id = Number(c.req.param('id'))
+
+    // 2. Vérification que l'utilisateur supprime son propre compte
+    if (c.get("userId") !== id) {
+      throw new HTTPException(403, { message: "Forbidden: vous ne pouvez supprimer que votre propre compte" });
+    }
+
     const userRepository = AppDataSource.getRepository(User);
 
-    // 2. Vérification de l'existence
+    // 3. Vérification de l'existence
     const exists = await userRepository.findOneBy({ id_user: id })
     if (!exists) throw new HTTPException(404, { message: "Impossible de supprimer : utilisateur introuvable" })
 
-    // 3. Suppression
+    // 4. Suppression
     await userRepository.delete({ id_user: id })
 
     // 4. Confirmation

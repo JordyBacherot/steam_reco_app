@@ -12,15 +12,21 @@ export const updateUser = async (c: Context) => {
   try {
     // 1. Récupération ID et données
     const id = Number(c.req.param('id'))
+
+    // 2. Vérification que l'utilisateur modifie son propre profil
+    if (c.get("userId") !== id) {
+      throw new HTTPException(403, { message: "Forbidden: vous ne pouvez modifier que votre propre profil" });
+    }
+
     const data = await c.req.json()
 
     const userRepository = AppDataSource.getRepository(User);
 
-    // 2. Vérification de l'existence
+    // 3. Vérification de l'existence
     const exists = await userRepository.findOneBy({ id_user: id })
     if (!exists) throw new HTTPException(404, { message: "Impossible de modifier : utilisateur introuvable" })
 
-    // 3. Mise à jour des informations
+    // 4. Mise à jour des informations
     await userRepository.update(
       { id_user: id },
       data

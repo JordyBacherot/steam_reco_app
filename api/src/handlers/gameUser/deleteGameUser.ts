@@ -25,6 +25,11 @@ export async function deleteGameUser(c: Context) {
             }, 400);
         }
 
+        // 3. Vérification que l'utilisateur modifie sa propre bibliothèque
+        if (c.get("userId") !== userId) {
+            throw new HTTPException(403, { message: "Forbidden: vous ne pouvez modifier que votre propre bibliothèque" });
+        }
+
         // 3. Suppression dans la base de données
         const result = await gamesUsersRepository.delete({
             id_user: userId,

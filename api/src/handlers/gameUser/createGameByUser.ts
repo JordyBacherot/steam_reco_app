@@ -25,6 +25,11 @@ export async function createGameUser(c: Context) {
             return c.json({ success: false, message: "IDs invalides" }, 400);
         }
 
+        // Vérification que l'utilisateur modifie sa propre bibliothèque
+        if (c.get("userId") !== userId) {
+            throw new HTTPException(403, { message: "Forbidden: vous ne pouvez modifier que votre propre bibliothèque" });
+        }
+
         // 4. Upsert du Jeu (Foreign Key constraint prevention)
         let gameRecord = await gamesRepository.findOneBy({ id_game: id_game });
         if (!gameRecord) {

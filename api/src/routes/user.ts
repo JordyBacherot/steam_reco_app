@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { getAllUser } from '../handlers/user/getAllUser';
 import { getUserById } from '../handlers/user/getUserById';
-import { createUser } from '../handlers/user/createUser';
 import { updateUser } from '../handlers/user/updateUser';
 import { deleteUser } from '../handlers/user/deleteUser';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
+import { authMiddleware } from '../middlewares/auth';
 
 export const createUserSchema = z.object({
   email: z.string().email({ message: "Email invalide" }),
@@ -15,12 +15,14 @@ export const createUserSchema = z.object({
   have_steamid: z.boolean().default(false)
 });
 
+// Schéma de mise à jour : password exclu (changer via POST /auth/password/change)
+const updateUserSchema = createUserSchema.omit({ password: true }).partial();
+
 const userRoutes = new Hono();
 
-userRoutes.get('/', getAllUser);
-userRoutes.get('/:id', getUserById);
-userRoutes.post('/', zValidator('json', createUserSchema), createUser);
-userRoutes.put('/:id', zValidator('json', createUserSchema.partial()), updateUser);
-userRoutes.delete('/:id', deleteUser);
+userRoutes.get('/', authMiddleware, getAllUser);
+userRoutes.get('/:id', authMiddleware, getUserById);
+userRoutes.put('/:id', authMiddleware, zValidator('json', updateUserSchema), updateUser);
+userRoutes.delete('/:id', authMiddleware, deleteUser);
 
 export default userRoutes;

@@ -7,6 +7,7 @@ import { getGameById } from '../handlers/game/getGameById'
 import { deleteGame } from '../handlers/game/deleteGame'
 import { searchGames } from '../handlers/game/searchGames'
 import { z } from 'zod'
+import { authMiddleware } from '../middlewares/auth'
 
 export const gameSchema = z.object({
   name: z.string().min(1, "Le nom est requis"),
@@ -23,14 +24,9 @@ games.get('/', getAllGames)           // Accès public : Liste des jeux
 games.get('/search', searchGames)     // Accès public : Recherche de jeux par nom (?q=terme&limit=10)
 games.get('/:id', getGameById)        // Accès public : Détail d'un jeu
 
-// 2. Routes protégées ( nécessitent validation des données )
-// Création d'un jeu avec validation complète du schéma
-games.post('/', zValidator('json', gameSchema), createGame)
-
-// Modification partielle d'un jeu (tous les champs sont optionnels via .partial())
-games.put('/:id', zValidator('json', gameSchema.partial()), updateGame)
-
-// Suppression d'un jeu
-games.delete('/:id', deleteGame)
+// 2. Routes protégées (nécessitent authentification + validation des données)
+games.post('/', authMiddleware, zValidator('json', gameSchema), createGame)
+games.put('/:id', authMiddleware, zValidator('json', gameSchema.partial()), updateGame)
+games.delete('/:id', authMiddleware, deleteGame)
 
 export default games

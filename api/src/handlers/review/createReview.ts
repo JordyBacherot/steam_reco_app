@@ -15,10 +15,10 @@ export const createReview = async (c: Context<any>) => {
     // 1. Validation automatique via Zod
     const data = await c.req.json();
 
-    // 2. Création de l'entité
+    // 2. Création de l'entité (id_user forcé depuis le JWT, pas du body)
     const newReview = reviewRepository.create({
       text: data.text,
-      id_user: data.id_user,
+      id_user: c.get("userId"),
       id_game: data.id_game
     });
 

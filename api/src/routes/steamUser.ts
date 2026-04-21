@@ -6,6 +6,7 @@ import { getSteamUserById } from '../handlers/steamUser/getSteamUserById';
 import { createSteamUser } from '../handlers/steamUser/createSteamUser';
 import { deleteSteamUser } from '../handlers/steamUser/deleteSteamUser';
 import { updateSteamUser } from '../handlers/steamUser/updateSteamUser';
+import { authMiddleware } from '../middlewares/auth';
 
 export const createSteamUserSchema = z.object({
   id_steam: z.string().min(1, { message: "Steam ID est requis" }),
@@ -17,17 +18,17 @@ export const createSteamUserSchema = z.object({
 
 const steamUserRoutes = new Hono();
 
-// 1. Lecture
-steamUserRoutes.get('/', getAllSteamUser);            // Liste tous les SteamUsers
-steamUserRoutes.get('/:id', getSteamUserById);        // Détail d'un SteamUser
+// 1. Lecture (public)
+steamUserRoutes.get('/', getAllSteamUser);
+steamUserRoutes.get('/:id', getSteamUserById);
 
-// 2. Ecriture (création avec validation)
-steamUserRoutes.post('/', zValidator('json', createSteamUserSchema), createSteamUser);
+// 2. Ecriture (protégé)
+steamUserRoutes.post('/', authMiddleware, zValidator('json', createSteamUserSchema), createSteamUser);
 
-// 3. Modification (partielle avec validation)
-steamUserRoutes.put('/:id', zValidator('json', createSteamUserSchema.partial()), updateSteamUser);
+// 3. Modification (protégé)
+steamUserRoutes.put('/:id', authMiddleware, zValidator('json', createSteamUserSchema.partial()), updateSteamUser);
 
-// 4. Suppression
-steamUserRoutes.delete('/:id', deleteSteamUser);
+// 4. Suppression (protégé)
+steamUserRoutes.delete('/:id', authMiddleware, deleteSteamUser);
 
 export default steamUserRoutes;

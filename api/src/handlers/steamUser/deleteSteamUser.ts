@@ -13,9 +13,14 @@ export const deleteSteamUser = async (c: Context) => {
     // 1. Récupération de l'ID utilisateur
     const id = Number(c.req.param('id'))
 
+    // 2. Vérification ownership
+    if (c.get("userId") !== id) {
+      throw new HTTPException(403, { message: "Forbidden: vous ne pouvez supprimer que votre propre compte Steam" });
+    }
+
     const steamUserRepository = AppDataSource.getRepository(SteamUser)
 
-    // 2. Vérification existence
+    // 3. Vérification existence
     const exists = await steamUserRepository.findOneBy({ id_user: id })
     if (!exists) throw new HTTPException(404, { message: "Impossible de supprimer : utilisateur introuvable" })
 

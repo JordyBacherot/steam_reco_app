@@ -78,7 +78,6 @@ class _GameReviewsWidgetState extends State<GameReviewsWidget> {
       final gameService = context.read<GameService>();
       final success = await gameService.postReview(
         gameId: widget.gameId,
-        userId: userId,
         text: text,
       );
 

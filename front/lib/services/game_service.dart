@@ -202,14 +202,12 @@ class GameService extends ChangeNotifier {
   /// Posts a new review for a game.
   Future<bool> postReview({
     required int gameId,
-    required int userId,
     required String text,
   }) async {
-    log('GameService: Posting review for game $gameId by user $userId...');
+    log('GameService: Posting review for game $gameId...');
     try {
       final response = await _apiClient.dio.post('/reviews', data: {
         'id_game': gameId,
-        'id_user': userId,
         'text': text,
       });
       return response.statusCode == 200 || response.statusCode == 201;

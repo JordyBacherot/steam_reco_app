@@ -17,6 +17,12 @@ export const updateSteamUser = async (c: Context<any>) => {
   try {
     // Standardisation : On utilise l'ID User (numérique) comme pour GET/DELETE
     const id = Number(c.req.param('id'))
+
+    // Vérification ownership
+    if (c.get("userId") !== id) {
+      throw new HTTPException(403, { message: "Forbidden: vous ne pouvez modifier que votre propre compte Steam" });
+    }
+
     const body = await c.req.valid('json');
 
     const { id_steam, username, level, profile_img } = body;
