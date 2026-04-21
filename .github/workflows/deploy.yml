@@ -56,11 +56,12 @@ jobs:
           bru run User/GetUserById.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
           bru run User/UpdateUser.bru --env dev --env-var token=$TOKEN --env-var userId=$USER_ID
 
-          # 4. Tests Game (création via curl pour récupérer l'ID, update + delete via Bruno)
-          GAME_ID=$(curl -s -X POST http://localhost:3000/games \
+          # 4. Tests Game (id_game est une PrimaryColumn non auto-générée, à fournir)
+          GAME_ID=99999
+          curl -s -X POST http://localhost:3000/games \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $TOKEN" \
-            -d '{"name":"CI Test Game","description":"A test game for the CI pipeline","studio":"TestStudio","image_url":"https://example.com/game.jpg"}' | jq -r '.id_game')
+            -d "{\"id_game\":$GAME_ID,\"name\":\"CI Test Game\",\"description\":\"A test game for the CI pipeline\",\"studio\":\"TestStudio\",\"image_url\":\"https://example.com/game.jpg\"}" > /dev/null
           bru run Game/UpdateGame.bru --env dev --env-var token=$TOKEN --env-var game_id=$GAME_ID
           bru run Game/DeleteGame.bru --env dev --env-var token=$TOKEN --env-var game_id=$GAME_ID
 
